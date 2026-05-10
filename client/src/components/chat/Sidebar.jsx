@@ -1,0 +1,338 @@
+import { useState, useEffect, useMemo, memo } from "react";
+import { useShallow } from "zustand/react/shallow";
+import { useAuthStore } from "../../stores/authStore";
+import { useChatStore } from "../../stores/chatStore";
+
+import axiosInstance from "../../utils/axios";
+import ChatCard from "./ChatCard";
+import ProfileModal from "../ui/ProfileModal";
+import AdminPanel from "../ui/AdminPanel";
+import FAQModal from "../ui/FAQModal";
+import MomentsRow from "./MomentsRow";
+import MomentCreator from "./MomentCreator";
+import MomentViewer from "./MomentViewer";
+import { useMomentStore } from "../../stores/momentStore";
+import { VerifiedTick, AdminIcon, HelpIcon } from "../ui/Icons";
+
+const Sidebar = ({ onChatSelect }) => {
+    const { user, logout } = useAuthStore();
+    const { hasActiveMoment, getHaloColor } = useMomentStore();
+    const { 
+        chats, activeChat, setActiveChat, 
+        addChat, isLoadingChats, togglePinChat, onlineUsers 
+    } = useChatStore(useShallow((s) => ({
+        chats: s.chats,
+        activeChat: s.activeChat,
+        setActiveChat: s.setActiveChat,
+        addChat: s.addChat,
+        isLoadingChats: s.isLoadingChats,
+        togglePinChat: s.togglePinChat,
+        onlineUsers: s.onlineUsers
+    })));
+    const [search, setSearch] = useState("");
+    const [searchResults, setSearchResults] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [isAdminOpen, setIsAdminOpen] = useState(false);
+    const [isFAQOpen, setIsFAQOpen] = useState(false);
+    const [isMomentCreatorOpen, setIsMomentCreatorOpen] = useState(false);
+    const [activeViewerMoments, setActiveViewerMoments] = useState(null);
+    const [activeTab, setActiveTab] = useState("recents");
+    const { fetchMoments } = useMomentStore();
+    
+    useEffect(() => {
+        fetchMoments();
+    }, [fetchMoments]);
+    
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const tab = params.get("tab");
+        if (tab === "contacts" || tab === "recents") {
+            setActiveTab(tab);
+        }
+    }, []);
+
+    useEffect(() => {
+        const delayDebounce = setTimeout(async () => {
+            if (search.trim().length < 2) {
+                setSearchResults([]);
+                return;
+            }
+            setIsSearching(true);
+            try {
+                const { data } = await axiosInstance.get(`/chats/users?search=${search.trim()}`);
+                setSearchResults(data.users);
+            } catch (_) {
+                setSearchResults([]);
+            }
+            setIsSearching(false);
+        }, 400);
+        return () => clearTimeout(delayDebounce);
+    }, [search]);
+
+    const handleSelectUser = async (userId) => {
+        try {
+            const { data } = await axiosInstance.post("/chats", { userId });
+            addChat(data.chat);
+            const freshChat = useChatStore.getState().chats.find((c) => c._id === data.chat._id) || data.chat;
+            setActiveChat(freshChat);
+            setSearch("");
+            setSearchResults([]);
+            onChatSelect();
+        } catch (_) { }
+    };
+
+    const handleSelectChat = (chat) => {
+        const freshChat = useChatStore.getState().chats.find((c) => c._id === chat._id) || chat;
+        setActiveChat(freshChat);
+        onChatSelect();
+    };
+
+    const getInitials = (name) => name ? name.slice(0, 2).toUpperCase() : "??";
+    const getOtherParticipant = (chat) => chat.participants?.find((p) => p._id !== user?._id);
+
+    const filteredChats = useMemo(() => {
+        const isContactChat = (chat) => {
+            const other = chat.participants?.find((p) => p._id !== user?._id);
+            if (!other) return false;
+            return user?.contacts?.some(
+                c => c.userId?.toString() === other._id?.toString() || c.userId === other._id
+            );
+        };
+        return activeTab === "contacts" ? chats.filter(isContactChat) : chats;
+    }, [chats, activeTab, user?._id, user?.contacts]);
+
+    const filteredSearchResults = useMemo(() => {
+        if (activeTab !== "contacts") return searchResults;
+        return searchResults.filter(u => user?.contacts?.some(
+            c => c.userId?.toString() === u._id?.toString() || c.userId === u._id
+        ));
+    }, [searchResults, activeTab, user?.contacts]);
+
+    const pinnedChats = useMemo(() => filteredChats.filter((c) => c.pinnedBy?.includes(user?._id)), [filteredChats, user?._id]);
+    const unpinnedChats = useMemo(() => filteredChats.filter((c) => !c.pinnedBy?.includes(user?._id)), [filteredChats, user?._id]);
+
+    return (
+        <div className="sidebar">
+            <div className="sidebar-profile">
+                <div
+                    className={`avatar avatar-sm ${hasActiveMoment(user?._id) ? 'moments-halo-thin' : ''}`}
+                    onClick={() => setIsProfileOpen(true)}
+                    style={{ 
+                        cursor: "pointer",
+                        ...(hasActiveMoment(user?._id) ? { '--halo-color': getHaloColor(user?._id, user?._id) } : {})
+                    }}
+                    title="Edit Profile"
+                >
+                    {user?.avatar ? (
+                        <img src={user.avatar} alt={user.username} />
+                    ) : (
+                        <span>{getInitials(user?.username)}</span>
+                    )}
+                </div>
+                <span className="sidebar-username" onClick={() => setIsProfileOpen(true)} style={{ cursor: "pointer", display: 'flex', alignItems: 'center' }} title="Edit Profile">
+                    {user?.username}
+                    {user?.isVerified && <VerifiedTick />}
+                </span>
+                <button className="sidebar-logout" onClick={logout} aria-label="Sign out" title="Sign out">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                </button>
+            </div>
+
+            <MomentsRow 
+                onAddMoment={() => setIsMomentCreatorOpen(true)} 
+                onViewMoment={(moments) => setActiveViewerMoments(moments)} 
+            />
+
+            <MomentCreator 
+                isOpen={isMomentCreatorOpen} 
+                onClose={() => setIsMomentCreatorOpen(false)} 
+            />
+
+            <MomentViewer 
+                moments={activeViewerMoments || []}
+                isOpen={!!activeViewerMoments}
+                onClose={() => setActiveViewerMoments(null)}
+            />
+
+            <div className="sidebar-search-wrap">
+                <div className="sidebar-search">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    <input
+                        type="text"
+                        placeholder={activeTab === "contacts" ? "Search contacts..." : "Search users..."}
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        aria-label="Search users"
+                    />
+                    {search && (
+                        <button onClick={() => { setSearch(""); setSearchResults([]); }} aria-label="Clear search">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
+                    )}
+                </div>
+
+                <div className="sidebar-tabs">
+                    <button
+                        className={`sidebar-tab ${activeTab === "recents" ? "active" : ""}`}
+                        onClick={() => setActiveTab("recents")}
+                    >
+                        Recents
+                    </button>
+                    <button
+                        className={`sidebar-tab ${activeTab === "contacts" ? "active" : ""}`}
+                        onClick={() => setActiveTab("contacts")}
+                    >
+                        Contacts
+                        {(() => {
+                            const onlineContactsCount = user?.contacts?.filter(c => {
+                                const uid = c.userId?._id?.toString() || c.userId?.toString();
+                                return onlineUsers.has(uid);
+                            }).length;
+                            return onlineContactsCount > 0 ? (
+                                <span className="sidebar-tab-badge online">{onlineContactsCount}</span>
+                            ) : null;
+                        })()}
+                    </button>
+                </div>
+
+                {search.trim().length >= 2 && (
+                    <div className="search-results">
+                        {isSearching && <div className="search-status">Searching...</div>}
+                        {!isSearching && filteredSearchResults.length === 0 && (
+                            <div className="search-status">
+                                {activeTab === "contacts" ? "No contacts match" : "No users found"}
+                            </div>
+                        )}
+                        {filteredSearchResults.map((u) => {
+                            const isUserContact = user?.contacts?.some(
+                                c => c.userId?.toString() === u._id?.toString() || c.userId === u._id
+                            );
+                            return (
+                                <button key={u._id} className="search-result-item" onClick={() => handleSelectUser(u._id)}>
+                                    <div className="avatar avatar-sm">
+                                        {u.avatar ? (
+                                            <img src={u.avatar} alt={u.username} />
+                                        ) : (
+                                            <span>{getInitials(u.username)}</span>
+                                        )}
+                                    </div>
+                                    <div className="search-result-info">
+                                        <span className="search-result-name">
+                                            {u.username} {isUserContact && "✨"}
+                                            {u.isVerified && <VerifiedTick />}
+                                        </span>
+                                        {u.isOnline && <span className="online-badge">Online</span>}
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+
+            <div className="sidebar-chats">
+                {isLoadingChats && (
+                    <div className="chats-loading">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="chat-card-skeleton">
+                                <div className="skeleton skeleton-avatar" />
+                                <div className="skeleton-lines">
+                                    <div className="skeleton skeleton-text" style={{ width: "60%" }} />
+                                    <div className="skeleton skeleton-text" style={{ width: "40%" }} />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {!isLoadingChats && filteredChats.length === 0 && (
+                    <div className="chats-empty">
+                        {activeTab === "contacts" ? (
+                            <>
+                                <p>No contacts yet</p>
+                                <span>Tag users as contacts from the three-dot menu on any chat</span>
+                            </>
+                        ) : (
+                            <>
+                                <p>No conversations yet</p>
+                                <span>Search for a user to start chatting</span>
+                            </>
+                        )}
+                    </div>
+                )}
+
+                {pinnedChats.length > 0 && (
+                    <div className="chats-section">
+                        <span className="chats-section-label">Pinned</span>
+                        {pinnedChats.map((chat) => (
+                            <ChatCard
+                                key={chat._id}
+                                chat={chat}
+                                isActive={activeChat?._id === chat._id}
+                                isPinned={true}
+                                currentUserId={user?._id}
+                                onSelect={() => handleSelectChat(chat)}
+                                onPin={() => togglePinChat(chat._id)}
+                            />
+                        ))}
+                    </div>
+                )}
+
+                {unpinnedChats.length > 0 && (
+                    <div className="chats-section">
+                        {pinnedChats.length > 0 && <span className="chats-section-label">Recent</span>}
+                        {unpinnedChats.map((chat) => (
+                            <ChatCard
+                                key={chat._id}
+                                chat={chat}
+                                isActive={activeChat?._id === chat._id}
+                                isPinned={false}
+                                currentUserId={user?._id}
+                                onSelect={() => handleSelectChat(chat)}
+                                onPin={() => togglePinChat(chat._id)}
+                            />
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            <ProfileModal
+                isOpen={isProfileOpen}
+                onClose={() => setIsProfileOpen(false)}
+                onSave={() => setIsProfileOpen(false)}
+            />
+
+            {(user?.role === "master_admin" || user?.role === "co_admin") ? (
+                <div className="sidebar-footer-dual">
+                    <button className="footer-btn admin-btn" onClick={() => setIsAdminOpen(true)}>
+                        <AdminIcon size={16} />
+                        Admin
+                    </button>
+                    <button className="footer-btn faq-btn" onClick={() => setIsFAQOpen(true)}>
+                        <HelpIcon size={16} />
+                        FAQ
+                    </button>
+                </div>
+            ) : (
+                <button className="sidebar-admin-btn" onClick={() => setIsFAQOpen(true)}>
+                    <HelpIcon />
+                    Help & FAQ
+                </button>
+            )}
+
+            {isAdminOpen && <AdminPanel onClose={() => setIsAdminOpen(false)} />}
+            {isFAQOpen && <FAQModal isOpen={isFAQOpen} onClose={() => setIsFAQOpen(false)} />}
+        </div>
+    );
+};
+
+export default memo(Sidebar);
