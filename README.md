@@ -30,13 +30,17 @@ The WebSocket layer (Phoenix Channels) is shared DNA - ZenChat+ inherits the sam
 - **Real-time messaging** - text, images, replies, edits, delete-for-everyone or delete-for-self
 - **Delivery & read receipts** - sent → delivered → seen, tracked per-message
 - **Typing indicators** - live scramble mode for mutual contacts
-- **#moments.** - 24-hour ephemeral posts. Rebuilt from Vanilla to support **text-based thoughts** with optional **synchronized music tracks** (Spotify-style cards).
+- **#moments.** - 24-hour ephemeral posts. Rebuilt from Vanilla to support **text-based thoughts** with optional **synchronized music tracks** (integrated with **iTunes** and **Deezer** APIs).
 - **Aura Avatars** - ring indicators on avatars showing who has active Moments
+- **Message Status Indicators** - Vanilla-style color-coded status reflected directly on message bubbles:
+    - **Charcoal** (#475569): Sent
+    - **Blue** (#3DA5D9): Delivered
+    - **Green** (#22C55E): Seen
 - **Push notifications** - Firebase Cloud Messaging, server-side delivery to FCM tokens
 - **Pending message delivery** - messages sent while offline are pushed on reconnect
 - **View-once media** - self-destructing image messages
 - **Pin & unpin chats** - pinned chats always surface to the top
-- **Contact System** - add users as contacts to see their typing status (scramble mode) and filter search results
+- **Contact System** - add users as contacts and filter search results
 - **Profile editing** - username, avatar (Cloudinary), password change
 - **Admin Panel** - full internal dashboard for management:
     - **Hierarchy**: `user` → `co_admin` → `master_admin`
@@ -49,6 +53,7 @@ The WebSocket layer (Phoenix Channels) is shared DNA - ZenChat+ inherits the sam
 ZenChat+ is engineered for real-world mobile conditions, including slow and intermittent connections like 2G:
 
 - **Optimistic UI** - messages appear immediately in the UI with a client-side ID (`cid`). When the server confirms, the optimistic entry is replaced in-place. The user never waits.
+- **Offline Readiness** - The app opens instantly even without internet by persisting auth state locally. It automatically reconnects and synchronizes all pending messages the moment a connection is detected.
 - **Pending delivery on reconnect** - the server tracks `is_delivered` per message. When a user reconnects after being offline, the server pushes all undelivered messages to their socket in a single batch.
 - **Minimal payloads** - Phoenix Channel events carry only the necessary fields. No bloated JSON, no redundant polling.
 - **Pool-size aware DB** - the backend runs on a pool size of `1` on the free tier, deliberately configured to stay within Gigalixir's free Postgres connection limit without crashing.

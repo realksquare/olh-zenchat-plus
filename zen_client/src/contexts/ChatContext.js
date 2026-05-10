@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect, useContext, useCallback } fr
 import api from '../services/api';
 import { SocketContext } from './SocketContext';
 import { AuthContext } from './AuthContext';
+import { getItemAsync, setItemAsync } from '../services/storage';
 
 export const ChatContext = createContext();
 
@@ -13,15 +14,21 @@ export const ChatProvider = ({ children }) => {
 
   const fetchChats = useCallback(async () => {
     try {
+      if (chats.length === 0) {
+        const cached = await getItemAsync('zenChats');
+        if (cached) setChats(JSON.parse(cached));
+      }
       setLoading(true);
       const res = await api.get('/chats');
-      setChats(res.data.chats || []);
+      const freshChats = res.data.chats || [];
+      setChats(freshChats);
+      await setItemAsync('zenChats', JSON.stringify(freshChats));
     } catch (error) {
       console.error('Failed to fetch chats:', error);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [chats.length]);
 
   useEffect(() => {
     if (user) {
