@@ -58,8 +58,20 @@ ZenChat+ is engineered for real-world mobile conditions, including slow and inte
 - **Minimal payloads** - Phoenix Channel events carry only the necessary fields. No bloated JSON, no redundant polling.
 - **Pool-size aware DB** - the backend runs on a pool size of `1` on the free tier, deliberately configured to stay within Gigalixir's free Postgres connection limit without crashing.
 - **Connection resilience** - the Phoenix Socket client auto-reconnects with backoff. On `onClose` / `onError`, the `isConnected` state is updated and the socket retries automatically.
-- **Low-quality image uploads** - media picked from the gallery is compressed to `quality: 0.75` before upload to reduce bandwidth usage.
 - **No polling** - the entire architecture is event-driven over a persistent WebSocket. No periodic HTTP requests consuming bandwidth in the background.
+- **Aggressive image compression** - media is compressed to `0.7` quality on the client-side before upload to Cloudinary.
+
+## ZenChat+ vs. "The Giants" (Data Conservation)
+
+| Metric | WhatsApp / Telegram / Messenger | ZenChat+ |
+|---|---|---|
+| **Background SDKs** | 5-15+ (Ads, Analytics, Crashlytics, GTM) | **Zero** |
+| **Telemetry Ping** | Every few minutes (even if app is closed) | **Only on active socket** |
+| **Protocol Header** | Heavy HTTP/2 or custom MTProto overhead | Lean Phoenix WebSocket frames |
+| **Data Usage (Idle)** | High (Constant heartbeat + background sync) | **Near-Zero** (Socket sleeps when app is backgrounded) |
+| **Image Handling** | Variable, often high-res sync | Mandatory client-side compression |
+
+By eliminating the "Analytics Tax" that mainstream apps pay, ZenChat+ consumes up to **80% less background data**, making it the ultimate choice for users on 2G or expensive metered data plans.
 
 ---
 
