@@ -67,15 +67,24 @@ export default function AppNavigator() {
   const navRef = useRef(null);
 
   useEffect(() => {
-    const sub = addNotificationResponseListener((data) => {
-      if (data?.chatId && navRef.current) {
-        navRef.current.navigate('ChatScreen', {
-          chatId: data.chatId,
-          chatName: 'Chat',
-        });
-      }
-    });
-    return () => sub?.remove?.();
+    let sub;
+    try {
+      sub = addNotificationResponseListener((data) => {
+        if (data?.chatId && navRef.current) {
+          navRef.current.navigate('ChatScreen', {
+            chatId: data.chatId,
+            chatName: 'Chat',
+          });
+        }
+      });
+    } catch (err) {
+      console.warn('Failed to setup notification listener:', err);
+    }
+    return () => {
+      try {
+        sub?.remove?.();
+      } catch (err) {}
+    };
   }, []);
 
   if (loading) {
