@@ -11,6 +11,7 @@ import {
 import { COLORS, SPACING, ROUNDING, TYPOGRAPHY, SHADOWS } from '../theme';
 import { ChatContext } from '../contexts/ChatContext';
 import { AuthContext } from '../contexts/AuthContext';
+import { SocketContext } from '../contexts/SocketContext';
 import ChatCard from '../components/ChatCard';
 import ShimmerCard from '../components/ShimmerCard';
 import AuraAvatar from '../components/AuraAvatar';
@@ -23,6 +24,7 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { chats, loading, fetchChats, pinChat, deleteChat, addContact, markRead } = useContext(ChatContext);
   const { user, logout } = useContext(AuthContext);
+  const { onlineUsers } = useContext(SocketContext);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showProfile, setShowProfile] = useState(false);
@@ -96,7 +98,7 @@ export default function HomeScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => setShowProfile(true)} style={styles.headerAvatar}>
-          <AuraAvatar user={user} size={36} moments={moments} viewedIds={viewedMomentIds} />
+          <AuraAvatar user={user} size={36} moments={moments} viewedIds={viewedMomentIds} isOnline={true} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>ZenChat+</Text>
         <View style={styles.headerActions}>
@@ -114,7 +116,13 @@ export default function HomeScreen() {
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.auraScroll}>
             {uniqueMomentUsers.map(auraUser => (
               <TouchableOpacity key={auraUser.id} style={styles.auraItem} onPress={() => handleAuraTap(auraUser)}>
-                <AuraAvatar user={auraUser} size={52} moments={moments} viewedIds={viewedMomentIds} />
+                <AuraAvatar 
+                  user={auraUser} 
+                  size={52} 
+                  moments={moments} 
+                  viewedIds={viewedMomentIds} 
+                  isOnline={onlineUsers.has(auraUser.id)}
+                />
                 <Text style={styles.auraName} numberOfLines={1}>{auraUser.username}</Text>
               </TouchableOpacity>
             ))}
@@ -153,6 +161,7 @@ export default function HomeScreen() {
               currentUser={user}
               moments={moments}
               viewedMomentIds={viewedMomentIds}
+              isOnline={item.participants?.some(p => onlineUsers.has(p.id))}
               onPress={() => handleChatPress(item)}
               onPin={() => pinChat(item.id)}
               onAddContact={() => {

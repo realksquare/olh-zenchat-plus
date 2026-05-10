@@ -31,7 +31,7 @@ function getLastMessagePreview(lastMessage) {
   }
 }
 
-export default function ChatCard({ chat, currentUser, moments = [], viewedMomentIds = new Set(), onPress, onPin, onAddContact, onDelete }) {
+export default function ChatCard({ chat, currentUser, moments = [], viewedMomentIds = new Set(), isOnline, onPress, onPin, onAddContact, onDelete }) {
   const [menuVisible, setMenuVisible] = useState(false);
   const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
   const dotsRef = useRef(null);
@@ -67,6 +67,7 @@ export default function ChatCard({ chat, currentUser, moments = [], viewedMoment
             size={48}
             moments={moments}
             viewedIds={viewedMomentIds}
+            isOnline={isOnline}
           />
         </View>
 

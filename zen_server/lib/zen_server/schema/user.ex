@@ -25,10 +25,11 @@ defmodule ZenServer.Schema.User do
 
   def registration_changeset(user, params) do
     user
-    |> cast(params, [:email, :password])
+    |> cast(params, [:email, :password, :username])
     |> validate_required([:email, :password])
     |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/, message: "must be a valid email")
-    |> validate_length(:password, min: 6, message: "must be at least 6 characters")
+    |> validate_length(:password, min: 7, max: 18, message: "must be 7-18 characters")
+    |> validate_format(:password, ~r/\d/, message: "must contain at least one number")
     |> update_change(:email, &String.downcase/1)
     |> unique_constraint(:email)
     |> unique_constraint(:username)

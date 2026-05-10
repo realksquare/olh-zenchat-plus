@@ -23,9 +23,8 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
 
   const criteria = [
-    { label: 'At least 8 characters', met: password.length >= 8 },
-    { label: 'Contains a number', met: /\d/.test(password) },
-    { label: 'Contains a special char', met: /[^A-Za-z0-9]/.test(password) },
+    { label: '7-18 characters', met: password.length >= 7 && password.length <= 18 },
+    { label: 'At least one number', met: /\d/.test(password) },
   ];
 
   const handleSubmit = async () => {
@@ -88,7 +87,7 @@ export default function LoginScreen() {
 
           <View style={[styles.inputGroup, styles.passwordGroup]}>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { flex: 1 }]}
               placeholder="Password"
               placeholderTextColor={COLORS.textDim}
               secureTextEntry={!showPassword}

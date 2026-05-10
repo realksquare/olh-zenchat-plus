@@ -4,7 +4,7 @@ import { COLORS, SHADOWS } from '../theme';
 
 import { AuthContext } from '../contexts/AuthContext';
 
-export default function AuraAvatar({ user, size = 44, moments = [], viewedIds = new Set(), style }) {
+export default function AuraAvatar({ user, size = 44, moments = [], viewedIds = new Set(), isOnline: forceOnline, style }) {
   const { user: currentUser } = React.useContext(AuthContext);
   const myId = currentUser?._id || currentUser?.id;
   const isMe = user?.id === myId || user?._id === myId;
@@ -51,7 +51,7 @@ export default function AuraAvatar({ user, size = 44, moments = [], viewedIds = 
           </View>
         )}
       </View>
-      {user?.isOnline && (
+      {(forceOnline ?? user?.isOnline) && (
         <View style={[styles.onlineDot, { bottom: 0, right: 0 }]} />
       )}
     </View>

