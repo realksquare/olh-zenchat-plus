@@ -1,144 +1,33 @@
-# ZenChat+
+# ZenChat Plus Backend
 
-A real-time mobile chat app built with **Elixir/Phoenix** on the backend and **React Native (Expo)** on the client. ZenChat+ is the native evolution of the original Vanilla ZenChat PWA - rebuilt from the ground up for reliability, speed, and zero strings attached.
+Welcome to the backend for ZenChat+. This is the engine that powers the React Native version of ZenChat. We decided to migrate from the MERN stack (Node.js and Socket.io) to Elixir and Phoenix to handle real-time chat at scale without breaking a sweat.
 
----
+### How it links with Vanilla ZenChat
 
-## From Vanilla ZenChat PWA to ZenChat+
+Vanilla ZenChat was built on the MERN stack. It worked well, but keeping real-time socket connections perfectly synced across unreliable mobile networks was a bit of a headache. 
 
-The original **ZenChat** was a Progressive Web App (PWA) - a browser-based chat platform installable on mobile via the browser. It proved the concept: real-time messaging, a clean dark UI, and a WebSocket backbone. But a PWA has hard limits - no native push notifications when the browser is closed, no reliable background delivery, and performance capped by the webview layer.
+ZenChat+ shares the exact same MongoDB database, the same authentication tokens (JWT), and the same external services (Cloudinary, Firebase, Spotify) as Vanilla ZenChat. We essentially swapped out the backend engine. If you switch between the web PWA (Vanilla) and the React Native app (Plus), you won't even notice the difference, except things will be noticeably faster and more stable.
 
-**ZenChat+** is the successor. It keeps everything that made Vanilla ZenChat work and throws away everything that held it back:
+### Features
 
-| Feature | Vanilla ZenChat (PWA) | ZenChat+ |
-|---|---|---|
-| Platform | Browser PWA | Native Android (Expo) |
-| Push Notifications | Limited (only when tab open) | Full FCM push, even when app is closed |
-| Offline delivery | None | Pending message delivery on reconnect |
-| Media upload | Basic | Cloudinary-backed, resilient upload |
-| Auth | Session-based | JWT via Guardian, stored in SecureStore |
-| Real-time | Socket.io | Phoenix Channels (WebSocket) |
-| Moments | Basic | 24-hour ephemeral text/musical stories |
-| Admin panel | None | Full admin - verify users, manage roles, suspend |
+* Built on Elixir and Phoenix framework
+* Uses Phoenix Channels and Presence for highly concurrent, flawless real-time communication (preventing missing message bugs)
+* Connects seamlessly with our existing MongoDB cluster using the Elixir MongoDB driver
+* Push notifications via Firebase Cloud Messaging (FCM) using JWT OAuth2
+* View-once media uploads powered by Cloudinary
+* Full parity with existing REST controllers (Auth, Chat, Message, Moment, Admin, Music)
+* Music integration handling both Deezer and iTunes APIs in parallel
 
-The WebSocket layer (Phoenix Channels) is shared DNA - ZenChat+ inherits the same proven real-time foundation and extends it with a proper native client.
+### Running it locally
 
----
+You will need Elixir and Erlang installed. Once you're set:
 
-## What ZenChat+ Does
+1. CD into the directory
+2. Run "mix deps.get" to grab the dependencies
+3. Run "mix phx.server" to fire it up
 
-- **Real-time messaging** - text, images, replies, edits, delete-for-everyone or delete-for-self
-- **Delivery & read receipts** - sent → delivered → seen, tracked per-message
-- **Typing indicators** - live scramble mode for mutual contacts
-- **#moments.** - 24-hour ephemeral posts. Rebuilt from Vanilla to support **text-based thoughts** with optional **synchronized music tracks** (integrated with **iTunes** and **Deezer** APIs).
-- **Aura Avatars** - ring indicators on avatars showing who has active Moments
-- **Message Status Indicators** - Vanilla-style color-coded status reflected directly on message bubbles:
-    - **Charcoal** (#475569): Sent
-    - **Blue** (#3DA5D9): Delivered
-    - **Green** (#22C55E): Seen
-- **Push notifications** - Firebase Cloud Messaging, server-side delivery to FCM tokens
-- **Pending message delivery** - messages sent while offline are pushed on reconnect
-- **View-once media** - self-destructing image messages
-- **Pin & unpin chats** - pinned chats always surface to the top
-- **Contact System** - add users as contacts and filter search results
-- **Profile editing** - username, avatar (Cloudinary), password change
-- **Admin Panel** - full internal dashboard for management:
-    - **Hierarchy**: `user` → `co_admin` → `master_admin`
-    - **Actions**: Live stats, verification badges, role promotion, account suspension, and deletion.
+The API and WebSocket will listen on port 4000 instead of 5000. For the WebSocket, connect via "ws://localhost:4000/socket/websocket?token=<JWT>&deviceType=app".
 
----
+### Environment Variables
 
-## Reliability on Unstable Networks
-
-ZenChat+ is engineered for real-world mobile conditions, including slow and intermittent connections like 2G:
-
-- **Optimistic UI** - messages appear immediately in the UI with a client-side ID (`cid`). When the server confirms, the optimistic entry is replaced in-place. The user never waits.
-- **Offline Readiness** - The app opens instantly even without internet by persisting auth state locally. It automatically reconnects and synchronizes all pending messages the moment a connection is detected.
-- **Pending delivery on reconnect** - the server tracks `is_delivered` per message. When a user reconnects after being offline, the server pushes all undelivered messages to their socket in a single batch.
-- **Minimal payloads** - Phoenix Channel events carry only the necessary fields. No bloated JSON, no redundant polling.
-- **Pool-size aware DB** - the backend runs on a pool size of `1` on the free tier, deliberately configured to stay within Gigalixir's free Postgres connection limit without crashing.
-- **Connection resilience** - the Phoenix Socket client auto-reconnects with backoff. On `onClose` / `onError`, the `isConnected` state is updated and the socket retries automatically.
-- **No polling** - the entire architecture is event-driven over a persistent WebSocket. No periodic HTTP requests consuming bandwidth in the background.
-- **Aggressive image compression** - media is compressed to `0.7` quality on the client-side before upload to Cloudinary.
-
-## ZenChat+ vs. "The Giants" (Data Conservation)
-
-| Metric | WhatsApp / Telegram / Messenger | ZenChat+ |
-|---|---|---|
-| **Background SDKs** | 5-15+ (Ads, Analytics, Crashlytics, GTM) | **Zero** |
-| **Telemetry Ping** | Every few minutes (even if app is closed) | **Only on active socket** |
-| **Protocol Header** | Heavy HTTP/2 or custom MTProto overhead | Lean Phoenix WebSocket frames |
-| **Data Usage (Idle)** | High (Constant heartbeat + background sync) | **Near-Zero** (Socket sleeps when app is backgrounded) |
-| **Image Handling** | Variable, often high-res sync | Mandatory client-side compression |
-
-By eliminating the "Analytics Tax" that mainstream apps pay, ZenChat+ consumes up to **80% less background data**, making it the ultimate choice for users on 2G or expensive metered data plans.
-
----
-
-## No Strings Attached
-
-ZenChat+ is free. Completely, permanently, unconditionally free.
-
-- **No ads.** The app has no advertising SDK, no tracking pixels, no analytics calls home.
-- **No payment.** No premium tier, no subscription, no locked features, no "Pro" plan.
-- **No data brokering.** User data stays in the app's own Postgres database. Nothing is sold, shared, or profiled.
-- **Open code.** This repository is public. You can read every line of what the server does with your messages.
-
-The infrastructure runs on [Gigalixir](https://gigalixir.com)'s free tier - a deliberate choice to keep operating costs at zero and ensure the app can run indefinitely without needing to monetize users.
-
----
-
-## Stack
-
-**Backend (`zen_server`)**
-- Elixir + Phoenix Framework
-- PostgreSQL via Ecto
-- Phoenix Channels (WebSocket)
-- Guardian (JWT auth)
-- Cloudinary (media storage)
-- Firebase Cloud Messaging (push notifications)
-- Finch (HTTP client)
-- Joken (JWT signing for FCM)
-- Deployed on Gigalixir
-
-**Client (`zen_client`)**
-- React Native via Expo (~54)
-- React Navigation (bottom tabs + native stack)
-- Phoenix JS client (`phoenix` npm package)
-- Expo SecureStore (token storage)
-- Expo Notifications (FCM)
-- Expo ImagePicker + Cloudinary upload
-- Lucide React Native (icons)
-- Axios (REST API)
-
----
-
-## Project Structure
-
-```
-olh-zenchat-plus/
-├── zen_client/          # React Native Expo app
-│   ├── src/
-│   │   ├── components/  # Reusable UI (ChatCard, MessageBubble, AuraAvatar, ...)
-│   │   ├── contexts/    # AuthContext, ChatContext, SocketContext
-│   │   ├── hooks/       # useSocket
-│   │   ├── navigation/  # AppNavigator (stack + tabs)
-│   │   ├── screens/     # Login, Home, Chat, Moments, MomentViewer, Admin
-│   │   ├── services/    # api.js, storage.js, notifications.js, upload.js
-│   │   └── theme/       # Color palette, spacing, typography, shadows
-│   └── app.json
-└── zen_server/          # Elixir/Phoenix backend
-    ├── lib/zen_server/
-    │   ├── channels/    # UserChannel, ChatChannel, UserSocket
-    │   ├── controllers/ # Auth, Chat, Message, Moment, Music, Admin
-    │   ├── plugs/       # Auth plug (JWT verification)
-    │   ├── schema/      # User, Chat, Message, Moment Ecto schemas
-    │   ├── services/    # Cloudinary, Firebase
-    │   ├── presence.ex  # Custom GenServer presence tracker
-    │   └── moment_sweeper.ex  # Hourly expired-moment cleanup
-    └── config/
-```
-
----
-
-*Built by the OLH Dev Team.*
+Make sure you have a .env file with your Mongo URI, Cloudinary keys, Firebase Service Account, and Spotify credentials. We also need a SECRET_KEY_BASE for Phoenix to handle sessions securely.

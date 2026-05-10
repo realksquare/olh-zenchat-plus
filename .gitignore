@@ -1,29 +1,8 @@
-# Build artifacts
-*.apk
-*.aab
-*.idsig
-*.jks
-*.keystore
-
-# Installer executables
-*.exe
-
-# Checksum files
-manifest-checksum.txt
-
-# TWA / Web wrapper config (local only)
-twa-manifest.json
-
-# Platform-specific deploy configs that are not used
-render.yaml
-
-# Gradle
-.gradle/
-build/
-
-# macOS
-.DS_Store
-
-# Environment
+/_build/
+/deps/
+/priv/static/
+*.ez
+erl_crash.dump
 .env
-.env.*
+secret.txt
+tmp_*/
