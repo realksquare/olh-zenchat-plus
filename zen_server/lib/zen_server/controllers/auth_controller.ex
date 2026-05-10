@@ -6,8 +6,8 @@ defmodule ZenServer.AuthController do
   alias ZenServer.Repo
   alias ZenServer.Schema.User
 
-  def register(conn, %{"email" => email, "password" => password}) do
-    changeset = User.registration_changeset(%User{}, %{email: email, password: password})
+  def register(conn, params = %{"email" => _email, "password" => _password}) do
+    changeset = User.registration_changeset(%User{}, params)
 
     case Repo.insert(changeset) do
       {:ok, user} ->

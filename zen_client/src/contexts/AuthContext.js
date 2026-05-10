@@ -58,9 +58,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (email, password) => {
+  const register = async (email, password, username) => {
     try {
-      const response = await api.post('/auth/register', { email, password });
+      const response = await api.post('/auth/register', { email, password, username });
       const { token: newToken, user: userData } = response.data;
 
       await setItemAsync('zenToken', newToken);

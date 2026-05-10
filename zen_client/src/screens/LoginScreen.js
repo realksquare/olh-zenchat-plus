@@ -18,6 +18,7 @@ export default function LoginScreen() {
   const { login, register } = useContext(AuthContext);
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -28,7 +29,7 @@ export default function LoginScreen() {
   ];
 
   const handleSubmit = async () => {
-    if (!email || !password) {
+    if (!email || !password || (!isLoginMode && !username)) {
       Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
@@ -44,7 +45,7 @@ export default function LoginScreen() {
     if (isLoginMode) {
       result = await login(email, password);
     } else {
-      result = await register(email, password);
+      result = await register(email, password, username);
     }
     
     setIsLoading(false);
@@ -84,6 +85,20 @@ export default function LoginScreen() {
               selectionColor={COLORS.primary}
             />
           </View>
+
+          {!isLoginMode && (
+            <View style={styles.inputGroup}>
+              <TextInput
+                style={styles.input}
+                placeholder="Username"
+                placeholderTextColor={COLORS.textDim}
+                autoCapitalize="none"
+                value={username}
+                onChangeText={setUsername}
+                selectionColor={COLORS.primary}
+              />
+            </View>
+          )}
 
           <View style={[styles.inputGroup, styles.passwordGroup]}>
             <TextInput
