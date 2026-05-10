@@ -17,8 +17,8 @@ The original **ZenChat** was a Progressive Web App (PWA) - a browser-based chat 
 | Offline delivery | None | Pending message delivery on reconnect |
 | Media upload | Basic | Cloudinary-backed, resilient upload |
 | Auth | Session-based | JWT via Guardian, stored in SecureStore |
-| Real-time | Phoenix Channels (WebSocket) | Phoenix Channels (WebSocket) - same engine |
-| Moments | Not present | 24-hour ephemeral media stories |
+| Real-time | Socket.io | Phoenix Channels (WebSocket) |
+| Moments | Basic | 24-hour ephemeral text/musical stories |
 | Admin panel | None | Full admin - verify users, manage roles, suspend |
 
 The WebSocket layer (Phoenix Channels) is shared DNA - ZenChat+ inherits the same proven real-time foundation and extends it with a proper native client.
@@ -30,16 +30,17 @@ The WebSocket layer (Phoenix Channels) is shared DNA - ZenChat+ inherits the sam
 - **Real-time messaging** - text, images, replies, edits, delete-for-everyone or delete-for-self
 - **Delivery & read receipts** - sent → delivered → seen, tracked per-message
 - **Typing indicators** - live scramble mode for mutual contacts
-- **Moments** - 24-hour story-style media posts with view counts, auto-expired server-side
+- **#moments.** - 24-hour ephemeral posts. Rebuilt from Vanilla to support **text-based thoughts** with optional **synchronized music tracks** (Spotify-style cards).
 - **Aura Avatars** - ring indicators on avatars showing who has active Moments
-- **Music on Moments** - attach a Spotify track to a Moment
 - **Push notifications** - Firebase Cloud Messaging, server-side delivery to FCM tokens
 - **Pending message delivery** - messages sent while offline are pushed on reconnect
 - **View-once media** - self-destructing image messages
 - **Pin & unpin chats** - pinned chats always surface to the top
-- **User search & contact system** - find users by username or email
+- **Contact System** - add users as contacts to see their typing status (scramble mode) and filter search results
 - **Profile editing** - username, avatar (Cloudinary), password change
-- **Admin panel** - live user stats, role management (master_admin / co_admin), verification badges, account suspension
+- **Admin Panel** - full internal dashboard for management:
+    - **Hierarchy**: `user` → `co_admin` → `master_admin`
+    - **Actions**: Live stats, verification badges, role promotion, account suspension, and deletion.
 
 ---
 
