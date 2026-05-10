@@ -38,12 +38,20 @@ defmodule ZenServer.Schema.User do
 
   def update_changeset(user, params) do
     user
-    |> cast(params, [:full_name, :avatar, :notifications_enabled, :privacy_settings, :fcm_tokens, :is_online, :last_seen])
+    |> cast(params, [:username, :full_name, :avatar, :notifications_enabled, :privacy_settings, :fcm_tokens, :is_online, :last_seen])
+    |> unique_constraint(:username)
   end
 
   def fcm_changeset(user, tokens) do
     change(user, fcm_tokens: tokens)
   end
+
+  def put_new_password(changeset, password) when is_binary(password) and password != "" do
+    changeset
+    |> validate_length(:password, min: 6, message: "must be at least 6 characters")
+    |> put_change(:password_hash, Pbkdf2.hash_pwd_salt(password))
+  end
+  def put_new_password(changeset, _), do: changeset
 
   defp put_auto_username(changeset) do
     if get_change(changeset, :username) do

@@ -7,6 +7,7 @@ defmodule ZenServer.Application do
       ZenServer.Repo,
       {Finch, name: ZenServer.Finch},
       ZenServer.Presence,
+      ZenServer.MomentSweeper,
       {Phoenix.PubSub, name: ZenServer.PubSub},
       ZenServer.Endpoint
     ]

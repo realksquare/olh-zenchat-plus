@@ -237,10 +237,22 @@ defmodule ZenServer.UserChannel do
     end
   end
 
-  defp send_push_notification(recipient_id, _populated_message, _chat_id) do
+  defp send_push_notification(recipient_id, message, chat_id) do
     recipient = Repo.get(User, recipient_id)
-    if recipient && recipient.notifications_enabled do
-      # Push notification skipped for brevity
+    if recipient && recipient.notifications_enabled && length(recipient.fcm_tokens) > 0 do
+      sender_name = get_in(message, ["sender", "username"]) || "Someone"
+      body = case message["type"] do
+        "image" -> "#{sender_name} sent a photo"
+        "video" -> "#{sender_name} sent a video"
+        "voice" -> "#{sender_name} sent a voice message"
+        _ -> "#{sender_name}: #{String.slice(message["content"] || "", 0, 100)}"
+      end
+      Enum.each(recipient.fcm_tokens, fn token ->
+        Firebase.send_push(recipient_id, token, "ZenChat+", body, %{
+          chatId: chat_id,
+          messageId: message["id"] || ""
+        })
+      end)
     end
   end
 end

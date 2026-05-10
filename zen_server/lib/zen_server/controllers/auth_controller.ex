@@ -55,11 +55,29 @@ defmodule ZenServer.AuthController do
 
   def update(conn, params) do
     user = Repo.get!(User, conn.assigns.current_user_id)
-    changeset = User.update_changeset(user, params)
+
+    changeset =
+      if Map.has_key?(params, "password") && params["password"] != "" do
+        user
+        |> User.update_changeset(params)
+        |> User.put_new_password(params["password"])
+      else
+        User.update_changeset(user, params)
+      end
+
+    changeset =
+      if Map.has_key?(params, "username") && params["username"] != "" do
+        Ecto.Changeset.put_change(changeset, :username, params["username"])
+        |> Ecto.Changeset.unique_constraint(:username)
+      else
+        changeset
+      end
 
     case Repo.update(changeset) do
       {:ok, updated} -> json(conn, %{user: User.private_fields(updated)})
-      {:error, _} -> conn |> put_status(400) |> json(%{message: "Update failed"})
+      {:error, cs} ->
+        errors = Ecto.Changeset.traverse_errors(cs, fn {msg, _} -> msg end)
+        conn |> put_status(400) |> json(%{message: "Update failed", errors: errors})
     end
   end
 

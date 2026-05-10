@@ -5,7 +5,7 @@ import api from '../services/api';
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUserState] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
 
       if (storedToken && storedUser) {
         setToken(storedToken);
-        setUser(JSON.parse(storedUser));
+        setUserState(JSON.parse(storedUser));
       }
     } catch (error) {
       console.error('Failed to load auth state:', error);
@@ -29,16 +29,21 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const setUser = async (userData) => {
+    setUserState(userData);
+    await SecureStore.setItemAsync('zenUser', JSON.stringify(userData));
+  };
+
   const login = async (email, password) => {
     try {
       const response = await api.post('/auth/login', { email, password });
       const { token: newToken, user: userData } = response.data;
-      
+
       await SecureStore.setItemAsync('zenToken', newToken);
       await SecureStore.setItemAsync('zenUser', JSON.stringify(userData));
-      
+
       setToken(newToken);
-      setUser(userData);
+      setUserState(userData);
       return { success: true };
     } catch (error) {
       console.error('Login error:', error);
@@ -57,12 +62,12 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await api.post('/auth/register', { email, password });
       const { token: newToken, user: userData } = response.data;
-      
+
       await SecureStore.setItemAsync('zenToken', newToken);
       await SecureStore.setItemAsync('zenUser', JSON.stringify(userData));
-      
+
       setToken(newToken);
-      setUser(userData);
+      setUserState(userData);
       return { success: true };
     } catch (error) {
       console.error('Registration error:', error);
@@ -75,11 +80,11 @@ export const AuthProvider = ({ children }) => {
     await SecureStore.deleteItemAsync('zenToken');
     await SecureStore.deleteItemAsync('zenUser');
     setToken(null);
-    setUser(null);
+    setUserState(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, setUser }}>
       {children}
     </AuthContext.Provider>
   );

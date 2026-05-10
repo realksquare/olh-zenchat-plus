@@ -1,21 +1,28 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home, PlaySquare } from 'lucide-react-native';
+import { Home, Sparkles, Shield } from 'lucide-react-native';
 import { View, ActivityIndicator } from 'react-native';
 
 import LoginScreen from '../screens/LoginScreen';
 import HomeScreen from '../screens/HomeScreen';
 import MomentsScreen from '../screens/MomentsScreen';
 import ChatScreen from '../screens/ChatScreen';
+import MomentViewer from '../screens/MomentViewer';
+import AdminScreen from '../screens/AdminScreen';
+
 import { COLORS } from '../theme';
 import { AuthContext } from '../contexts/AuthContext';
+import { addNotificationResponseListener } from '../services/notifications';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-function MainTabs() {
+function MainTabs({ navigation }) {
+  const { user } = useContext(AuthContext);
+  const isMaster = user?.role === 'master_admin' || user?.role === 'co_admin';
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -23,31 +30,53 @@ function MainTabs() {
         tabBarStyle: {
           backgroundColor: COLORS.surface,
           borderTopColor: COLORS.border,
+          height: 58,
         },
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS.textMuted,
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '500',
+          marginBottom: 4,
+        },
       }}
     >
-      <Tab.Screen 
-        name="Chats" 
-        component={HomeScreen} 
-        options={{
-          tabBarIcon: ({ color, size }) => <Home color={color} size={size} />
-        }}
+      <Tab.Screen
+        name="Chats"
+        component={HomeScreen}
+        options={{ tabBarIcon: ({ color, size }) => <Home color={color} size={size - 2} /> }}
       />
-      <Tab.Screen 
-        name="Moments" 
-        component={MomentsScreen} 
-        options={{
-          tabBarIcon: ({ color, size }) => <PlaySquare color={color} size={size} />
-        }}
+      <Tab.Screen
+        name="Aura"
+        component={MomentsScreen}
+        options={{ tabBarIcon: ({ color, size }) => <Sparkles color={color} size={size - 2} /> }}
       />
+      {isMaster && (
+        <Tab.Screen
+          name="Admin"
+          component={AdminScreen}
+          options={{ tabBarIcon: ({ color, size }) => <Shield color={color} size={size - 2} /> }}
+        />
+      )}
     </Tab.Navigator>
   );
 }
 
 export default function AppNavigator() {
   const { user, loading } = useContext(AuthContext);
+  const navRef = useRef(null);
+
+  useEffect(() => {
+    const sub = addNotificationResponseListener((data) => {
+      if (data?.chatId && navRef.current) {
+        navRef.current.navigate('ChatScreen', {
+          chatId: data.chatId,
+          chatName: 'Chat',
+        });
+      }
+    });
+    return () => sub?.remove?.();
+  }, []);
 
   if (loading) {
     return (
@@ -58,12 +87,17 @@ export default function AppNavigator() {
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <NavigationContainer ref={navRef}>
+      <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
         {user ? (
           <>
             <Stack.Screen name="MainTabs" component={MainTabs} />
             <Stack.Screen name="ChatScreen" component={ChatScreen} />
+            <Stack.Screen
+              name="MomentViewer"
+              component={MomentViewer}
+              options={{ animation: 'fade', presentation: 'fullScreenModal' }}
+            />
           </>
         ) : (
           <Stack.Screen name="Login" component={LoginScreen} />

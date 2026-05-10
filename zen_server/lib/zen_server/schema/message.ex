@@ -12,6 +12,7 @@ defmodule ZenServer.Schema.Message do
     field :is_delivered, :boolean, default: false
     field :is_deleted, :boolean, default: false
     field :is_starred, :boolean, default: false
+    field :is_edited, :boolean, default: false
     field :is_view_once, :boolean, default: false
     field :media_url, :string
     belongs_to :chat, ZenServer.Schema.Chat
@@ -36,6 +37,7 @@ defmodule ZenServer.Schema.Message do
       "isDelivered" => msg.is_delivered,
       "isDeleted" => msg.is_deleted,
       "isStarred" => msg.is_starred,
+      "isEdited" => msg.is_edited,
       "isViewOnce" => msg.is_view_once,
       "chatId" => msg.chat_id,
       "senderId" => msg.sender_id,
