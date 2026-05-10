@@ -6,6 +6,7 @@ config :zen_server,
 config :zen_server, ZenServer.Endpoint,
   http: [port: 4000],
   secret_key_base: System.get_env("SECRET_KEY_BASE") || "CHANGE_ME_IN_PROD_USE_MIX_PHEX_GEN_SECRET",
+  render_errors: [view: ZenServer.ErrorView, accepts: ~w(json), layout: false],
   server: true
 
 config :zen_server, ZenServer.Guardian,

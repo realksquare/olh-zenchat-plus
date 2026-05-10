@@ -2,10 +2,8 @@ defmodule ZenServer.Repo.Migrations.CreateTables do
   use Ecto.Migration
 
   def change do
-    execute "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"", ""
-
     create table(:users, primary_key: false) do
-      add :id, :binary_id, primary_key: true, default: fragment("uuid_generate_v4()")
+      add :id, :binary_id, primary_key: true
       add :email, :string, null: false
       add :username, :string
       add :password_hash, :string, null: false
@@ -26,7 +24,7 @@ defmodule ZenServer.Repo.Migrations.CreateTables do
     create unique_index(:users, [:username])
 
     create table(:chats, primary_key: false) do
-      add :id, :binary_id, primary_key: true, default: fragment("uuid_generate_v4()")
+      add :id, :binary_id, primary_key: true
       add :is_group, :boolean, default: false
       add :group_name, :string
       add :group_avatar, :string
@@ -43,7 +41,7 @@ defmodule ZenServer.Repo.Migrations.CreateTables do
     create unique_index(:chat_participants, [:chat_id, :user_id])
 
     create table(:messages, primary_key: false) do
-      add :id, :binary_id, primary_key: true, default: fragment("uuid_generate_v4()")
+      add :id, :binary_id, primary_key: true
       add :content, :text
       add :type, :string, default: "text"
       add :is_read, :boolean, default: false
@@ -62,7 +60,7 @@ defmodule ZenServer.Repo.Migrations.CreateTables do
     create index(:messages, [:sender_id])
 
     create table(:moments, primary_key: false) do
-      add :id, :binary_id, primary_key: true, default: fragment("uuid_generate_v4()")
+      add :id, :binary_id, primary_key: true
       add :media_url, :string
       add :media_type, :string, default: "image"
       add :caption, :string

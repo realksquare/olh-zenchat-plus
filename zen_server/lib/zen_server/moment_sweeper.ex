@@ -22,12 +22,16 @@ defmodule ZenServer.MomentSweeper do
   end
 
   defp sweep_expired do
-    now = DateTime.utc_now()
-    expired_ids = from(m in Moment, where: m.expires_at <= ^now, select: m.id) |> Repo.all()
-    if length(expired_ids) > 0 do
-      from(v in MomentView, where: v.moment_id in ^expired_ids) |> Repo.delete_all()
-      {count, _} = from(m in Moment, where: m.id in ^expired_ids) |> Repo.delete_all()
-      Logger.info("MomentSweeper: deleted #{count} expired moment(s)")
+    try do
+      now = DateTime.utc_now()
+      expired_ids = from(m in Moment, where: m.expires_at <= ^now, select: m.id) |> Repo.all()
+      if length(expired_ids) > 0 do
+        from(v in MomentView, where: v.moment_id in ^expired_ids) |> Repo.delete_all()
+        {count, _} = from(m in Moment, where: m.id in ^expired_ids) |> Repo.delete_all()
+        Logger.info("MomentSweeper: deleted #{count} expired moment(s)")
+      end
+    rescue
+      e -> Logger.warning("MomentSweeper: skipped sweep (database might not be migrated yet)")
     end
   end
 
