@@ -7,7 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { ArrowLeft, Music, Eye } from 'lucide-react-native';
+import { ArrowLeft, Music, Eye, X } from 'lucide-react-native';
 import { COLORS, SPACING, ROUNDING, TYPOGRAPHY, SHADOWS } from '../theme';
 import api from '../services/api';
 import AuraAvatar from '../components/AuraAvatar';

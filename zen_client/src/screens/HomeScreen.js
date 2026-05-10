@@ -17,6 +17,7 @@ import ShimmerCard from '../components/ShimmerCard';
 import AuraAvatar from '../components/AuraAvatar';
 import ProfileModal from '../components/ProfileModal';
 import NewChatModal from '../components/NewChatModal';
+import PostMomentModal from '../components/PostMomentModal';
 import api from '../services/api';
 
 export default function HomeScreen() {
@@ -29,6 +30,7 @@ export default function HomeScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showProfile, setShowProfile] = useState(false);
   const [showNewChat, setShowNewChat] = useState(false);
+  const [showPostMoment, setShowPostMoment] = useState(false);
   const [moments, setMoments] = useState([]);
   const [viewedMomentIds, setViewedMomentIds] = useState(new Set());
   const [refreshing, setRefreshing] = useState(false);
@@ -111,24 +113,33 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {uniqueMomentUsers.length > 0 && (
-        <View style={styles.auraRow}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.auraScroll}>
-            {uniqueMomentUsers.map(auraUser => (
-              <TouchableOpacity key={auraUser.id} style={styles.auraItem} onPress={() => handleAuraTap(auraUser)}>
-                <AuraAvatar 
-                  user={auraUser} 
-                  size={52} 
-                  moments={moments} 
-                  viewedIds={viewedMomentIds} 
-                  isOnline={onlineUsers.has(auraUser.id)}
-                />
-                <Text style={styles.auraName} numberOfLines={1}>{auraUser.username}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-      )}
+      <View style={styles.auraRow}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.auraScroll}>
+          <TouchableOpacity style={styles.auraItem} onPress={() => setShowPostMoment(true)}>
+            <View>
+              <AuraAvatar user={user} size={52} moments={moments.filter(m => m.user?.id === user?.id)} viewedIds={viewedMomentIds} isOnline={true} />
+              <View style={styles.addMomentBadge}>
+                <Plus size={10} color="#fff" strokeWidth={3} />
+              </View>
+            </View>
+            <Text style={styles.auraName} numberOfLines={1}>You</Text>
+          </TouchableOpacity>
+
+          {uniqueMomentUsers.filter(u => u.id !== user?.id && u.id !== user?._id).map(auraUser => (
+            <TouchableOpacity key={auraUser.id} style={styles.auraItem} onPress={() => handleAuraTap(auraUser)}>
+              <AuraAvatar 
+                user={auraUser} 
+                size={52} 
+                moments={moments} 
+                viewedIds={viewedMomentIds} 
+                isOnline={onlineUsers.has(auraUser.id)}
+              />
+              <Text style={styles.auraName} numberOfLines={1}>{auraUser.username}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
 
       <View style={styles.searchContainer}>
         <Search size={16} color={COLORS.textMuted} />
@@ -196,6 +207,11 @@ export default function HomeScreen() {
         onClose={() => setShowNewChat(false)}
         onChatCreated={handleNewChatCreated}
       />
+      <PostMomentModal 
+        visible={showPostMoment} 
+        onClose={() => setShowPostMoment(false)} 
+        onPublished={fetchMoments} 
+      />
     </View>
   );
 }
@@ -247,10 +263,25 @@ const styles = StyleSheet.create({
   },
   auraName: {
     color: COLORS.textMuted,
-    fontSize: TYPOGRAPHY.fontSizes.xs,
+    fontSize: 10,
     marginTop: 4,
     textAlign: 'center',
+    fontWeight: '500',
   },
+  addMomentBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: COLORS.primary,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: COLORS.background,
+  },
+
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',

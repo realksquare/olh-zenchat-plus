@@ -46,11 +46,7 @@ function MainTabs({ navigation }) {
         component={HomeScreen}
         options={{ tabBarIcon: ({ color, size }) => <Home color={color} size={size - 2} /> }}
       />
-      <Tab.Screen
-        name="#moments."
-        component={MomentsScreen}
-        options={{ tabBarIcon: ({ color, size }) => <Sparkles color={color} size={size - 2} /> }}
-      />
+
       {isMaster && (
         <Tab.Screen
           name="Admin"
