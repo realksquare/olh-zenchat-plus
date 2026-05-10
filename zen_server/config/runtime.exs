@@ -14,7 +14,7 @@ config :zen_server, ZenServer.Repo,
   url: System.fetch_env!("DATABASE_URL"),
   ssl: true,
   ssl_opts: [verify: :verify_none],
-  pool_size: 10
+  pool_size: String.to_integer(System.get_env("POOL_SIZE", "2"))
 
 config :zen_server, :cloudinary,
   cloud_name: System.get_env("CLOUDINARY_CLOUD_NAME"),
