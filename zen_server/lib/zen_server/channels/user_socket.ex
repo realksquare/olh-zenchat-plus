@@ -10,12 +10,11 @@ defmodule ZenServer.UserSocket do
       {:ok, claims} ->
         case ZenServer.Guardian.resource_from_claims(claims) do
           {:ok, user} ->
-            user_id = to_string(user["_id"])
             device_type = Map.get(params, "deviceType", "app")
             {:ok,
               socket
               |> assign(:current_user, user)
-              |> assign(:user_id, user_id)
+              |> assign(:user_id, user.id)
               |> assign(:device_type, device_type)
             }
           _ -> :error

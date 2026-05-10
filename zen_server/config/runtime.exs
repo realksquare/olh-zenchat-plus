@@ -1,8 +1,5 @@
 import Config
 
-# This file is evaluated at RUNTIME, so System.get_env works correctly
-# even when variables are loaded by the bat file or OS environment
-
 config :zen_server, ZenServer.Endpoint,
   secret_key_base: System.fetch_env!("SECRET_KEY_BASE")
 

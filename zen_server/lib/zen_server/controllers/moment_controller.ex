@@ -39,8 +39,7 @@ defmodule ZenServer.MomentController do
       {:ok, moment} ->
         moment = Repo.preload(moment, [:user, :views])
         conn |> put_status(201) |> json(%{moment: serialize_moment(moment, user_id)})
-      {:error, changeset} ->
-        IO.inspect(changeset.errors)
+      {:error, _changeset} ->
         conn |> put_status(400) |> json(%{message: "Failed to create moment"})
     end
   end

@@ -2,7 +2,7 @@ export const COLORS = {
   background: '#0E1117',
   surface: '#161B22',
   surfaceLight: 'rgba(255, 255, 255, 0.04)',
-  surfaceHighlight: 'rgba(61, 165, 217, 0.1)', // #3DA5D9 with opacity
+  surfaceHighlight: 'rgba(61, 165, 217, 0.1)',
   primary: '#3DA5D9',
   primaryHover: '#2B8FBF',
   primaryDark: '#1E7AAA',
@@ -18,12 +18,10 @@ export const COLORS = {
   warning: '#F59E0B',
   transparent: 'transparent',
   overlay: 'rgba(14, 17, 23, 0.8)',
-  // Original Vanilla indicators
   msgSent: '#475569',
   msgDelivered: '#3DA5D9',
   msgSeen: '#22C55E',
   online: '#22C55E',
-  // Aura colors
   auraSapphire: '#3B82F6',
   auraEmerald: '#10B981',
   auraCharcoal: '#334155',

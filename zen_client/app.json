@@ -21,7 +21,8 @@
         "backgroundColor": "#0E1117"
       },
       "edgeToEdgeEnabled": true,
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "package": "com.olhdevteam.zcplus"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -36,7 +37,11 @@
           "sounds": []
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "b696c3a2-61f3-434e-966f-463cd4a2512f"
+      }
+    }
   }
 }
-

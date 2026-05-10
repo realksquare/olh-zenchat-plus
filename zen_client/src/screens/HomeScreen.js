@@ -1,13 +1,12 @@
-import React, { useState, useContext, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useContext, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   TextInput, ScrollView, RefreshControl, Alert, Platform
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { LinearGradient } from 'expo-linear-gradient';
 import {
-  Search, MessageCirclePlus, LogOut, Settings, X
+  Search, MessageCirclePlus, LogOut, X
 } from 'lucide-react-native';
 import { COLORS, SPACING, ROUNDING, TYPOGRAPHY, SHADOWS } from '../theme';
 import { ChatContext } from '../contexts/ChatContext';
@@ -50,7 +49,6 @@ export default function HomeScreen() {
   }, [fetchChats]);
 
   const handleLogout = () => {
-    console.log('Logout button pressed');
     if (Platform.OS === 'web') {
       if (confirm('Are you sure you want to sign out?')) {
         logout();

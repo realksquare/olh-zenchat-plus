@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "437206456707",
+    "project_id": "com-olhdevteam-zcplus",
+    "storage_bucket": "com-olhdevteam-zcplus.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:437206456707:android:11eed4b3609c54d1517eb6",
+        "android_client_info": {
+          "package_name": "com.olhdevteam.zcplus"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAmp9m9Bk1W1W8Dir3CrEuBhCXJi-nDOV8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

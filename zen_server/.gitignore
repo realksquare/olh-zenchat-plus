@@ -4,3 +4,5 @@
 *.ez
 erl_crash.dump
 .env
+secret.txt
+tmp_*/

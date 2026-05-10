@@ -7,7 +7,6 @@ defmodule ZenServer.ChatChannel do
   def join("chat:" <> chat_id, _payload, socket) do
     user_id = socket.assigns.user_id
 
-    # Verify user is a participant
     is_participant =
       from(cp in ChatParticipant,
         where: cp.chat_id == ^chat_id and cp.user_id == ^user_id

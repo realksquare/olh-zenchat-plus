@@ -14,7 +14,6 @@ export const useSocket = () => {
   useEffect(() => {
     if (!token || !user) return;
 
-    // Initialize Phoenix Socket
     const socket = new Socket(`${WS_URL}/websocket`, {
       params: { token, deviceType: 'app' },
     });
@@ -26,14 +25,12 @@ export const useSocket = () => {
     socket.connect();
     socketRef.current = socket;
 
-    // Join the personal user channel
     const channel = socket.channel(`user:${user._id}`, {});
     
     channel.join()
       .receive('ok', () => console.log('Joined user channel successfully'))
       .receive('error', (resp) => console.log('Failed to join user channel', resp));
 
-    // Handle incoming events
     channel.on('user_online', ({ userId }) => {
       setOnlineUsers((prev) => {
         const next = new Set(prev);
@@ -52,7 +49,6 @@ export const useSocket = () => {
 
     channelRef.current = channel;
 
-    // Cleanup on unmount or logout
     return () => {
       channel.leave();
       socket.disconnect();

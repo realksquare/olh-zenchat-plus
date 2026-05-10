@@ -1,19 +1,18 @@
 import React, { useState, useContext } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TextInput, 
-  TouchableOpacity, 
-  Alert, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Dimensions
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, SPACING, TYPOGRAPHY, ROUNDING, SHADOWS } from '../theme';
-import { LogIn, UserPlus, Mail, Lock, Eye, EyeOff, CheckCircle2, Circle } from 'lucide-react-native';
+import { Eye, EyeOff, CheckCircle2, Circle } from 'lucide-react-native';
+import { AuthContext } from '../contexts/AuthContext';
 
 export default function LoginScreen() {
   const { login, register } = useContext(AuthContext);

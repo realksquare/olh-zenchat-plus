@@ -88,9 +88,8 @@ defmodule ZenServer.UserChannel do
     Enum.each(participants, fn p_id ->
       sockets = Presence.get_sockets(p_id)
       if map_size(sockets) > 0 do
-        Enum.each(sockets, fn {sock_id, _dtype} ->
+        Enum.each(sockets, fn {_sock_id, _dtype} ->
           ZenServer.Endpoint.broadcast("user:#{p_id}", "receive_message", %{message: serialized})
-          _ = sock_id
         end)
       else
         Task.start(fn -> send_push_notification(p_id, serialized, chat_id) end)
@@ -215,9 +214,7 @@ defmodule ZenServer.UserChannel do
     end
   end
 
-  defp push_online_contacts(_user_id, _socket) do
-    # Simplified
-  end
+  defp push_online_contacts(_user_id, _socket), do: :ok
 
   defp deliver_pending_messages(user_id, socket) do
     chat_ids = from(cp in ChatParticipant, where: cp.user_id == ^user_id, select: cp.chat_id) |> Repo.all()
