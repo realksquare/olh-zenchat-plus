@@ -4,7 +4,7 @@ defmodule ZenServer.MessageController do
   import Ecto.Query
 
   alias ZenServer.Repo
-  alias ZenServer.Schema.{Chat, ChatParticipant, Message, User}
+  alias ZenServer.Schema.{Chat, Message, User}
 
   def index(conn, %{"chat_id" => chat_id} = params) do
     user_id = conn.assigns.current_user_id

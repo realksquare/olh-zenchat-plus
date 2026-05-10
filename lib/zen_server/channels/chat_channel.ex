@@ -1,7 +1,7 @@
 defmodule ZenServer.ChatChannel do
   use Phoenix.Channel
   alias ZenServer.Repo
-  alias ZenServer.Schema.{Chat, ChatParticipant}
+  alias ZenServer.Schema.ChatParticipant
   import Ecto.Query
 
   def join("chat:" <> chat_id, _payload, socket) do

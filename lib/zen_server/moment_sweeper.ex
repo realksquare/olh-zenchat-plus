@@ -31,7 +31,7 @@ defmodule ZenServer.MomentSweeper do
         Logger.info("MomentSweeper: deleted #{count} expired moment(s)")
       end
     rescue
-      e -> Logger.warning("MomentSweeper: skipped sweep (database might not be migrated yet)")
+      _e -> Logger.warning("MomentSweeper: skipped sweep (database might not be migrated yet)")
     end
   end
 

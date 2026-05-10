@@ -35,17 +35,6 @@ defmodule ZenServer.UserChannel do
     {:noreply, socket}
   end
 
-  @impl true
-  def terminate(_reason, socket) do
-    user_id = socket.assigns.user_id
-    Presence.user_disconnected(user_id, socket.id)
-
-    unless Presence.online?(user_id) do
-      Process.send_after(self(), {:go_offline, user_id}, 30_000)
-    end
-    {:ok, socket}
-  end
-
   def handle_info({:go_offline, user_id}, socket) do
     unless Presence.online?(user_id) do
       now = DateTime.utc_now()
@@ -56,6 +45,17 @@ defmodule ZenServer.UserChannel do
       end
     end
     {:noreply, socket}
+  end
+
+  @impl true
+  def terminate(_reason, socket) do
+    user_id = socket.assigns.user_id
+    Presence.user_disconnected(user_id, socket.id)
+
+    unless Presence.online?(user_id) do
+      Process.send_after(self(), {:go_offline, user_id}, 30_000)
+    end
+    {:ok, socket}
   end
 
   @impl true
