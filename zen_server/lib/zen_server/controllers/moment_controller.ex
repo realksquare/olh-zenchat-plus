@@ -28,8 +28,8 @@ defmodule ZenServer.MomentController do
 
     attrs = %{
       media_url: params["mediaUrl"],
-      media_type: params["mediaType"] || "image",
-      caption: params["caption"],
+      media_type: params["type"] || "text",
+      caption: params["content"] || params["caption"],
       song_data: params["songData"] || %{},
       expires_at: expires_at,
       user_id: user_id
@@ -39,7 +39,8 @@ defmodule ZenServer.MomentController do
       {:ok, moment} ->
         moment = Repo.preload(moment, [:user, :views])
         conn |> put_status(201) |> json(%{moment: serialize_moment(moment, user_id)})
-      {:error, _} ->
+      {:error, changeset} ->
+        IO.inspect(changeset.errors)
         conn |> put_status(400) |> json(%{message: "Failed to create moment"})
     end
   end

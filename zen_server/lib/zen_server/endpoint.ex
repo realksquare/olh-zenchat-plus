@@ -10,7 +10,7 @@ defmodule ZenServer.Endpoint do
     longpoll: false
 
   plug CORSPlug,
-    origin: Application.compile_env(:zen_server, :allowed_origins, ["*"]),
+    origin: "*",
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     headers: ["Content-Type", "Authorization", "Accept"]
 

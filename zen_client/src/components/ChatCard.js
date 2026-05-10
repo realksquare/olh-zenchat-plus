@@ -43,10 +43,6 @@ export default function ChatCard({ chat, currentUser, moments = [], viewedMoment
   const time = formatTime(chat.lastMessage?.createdAt || chat.updatedAt);
 
   const handlePress = () => {
-    Animated.sequence([
-      Animated.timing(scaleAnim, { toValue: 0.97, duration: 80, useNativeDriver: true }),
-      Animated.timing(scaleAnim, { toValue: 1, duration: 80, useNativeDriver: true }),
-    ]).start();
     onPress?.();
   };
 
@@ -64,45 +60,43 @@ export default function ChatCard({ chat, currentUser, moments = [], viewedMoment
 
   return (
     <>
-      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-        <TouchableOpacity style={styles.card} activeOpacity={0.85} onPress={handlePress}>
-          <View style={styles.avatarWrap}>
-            <AuraAvatar
-              user={otherUser}
-              size={48}
-              moments={moments}
-              viewedIds={viewedMomentIds}
-            />
-          </View>
+      <TouchableOpacity style={styles.card} activeOpacity={0.7} onPress={handlePress}>
+        <View style={styles.avatarWrap}>
+          <AuraAvatar
+            user={otherUser}
+            size={48}
+            moments={moments}
+            viewedIds={viewedMomentIds}
+          />
+        </View>
 
-          <View style={styles.info}>
-            <View style={styles.topRow}>
-              <View style={styles.nameRow}>
-                {chat.isPinned && <Pin size={12} color={COLORS.textMuted} style={{ marginRight: 4 }} />}
-                <Text style={styles.name} numberOfLines={1}>{displayName}</Text>
+        <View style={styles.info}>
+          <View style={styles.topRow}>
+            <View style={styles.nameRow}>
+              {chat.isPinned && <Pin size={12} color={COLORS.primary} style={{ marginRight: 4 }} />}
+              <Text style={styles.name} numberOfLines={1}>{displayName}</Text>
+            </View>
+            <Text style={styles.time}>{time}</Text>
+          </View>
+          <View style={styles.bottomRow}>
+            <Text style={styles.preview} numberOfLines={1}>{preview}</Text>
+            {chat.unreadCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{chat.unreadCount > 99 ? '99+' : chat.unreadCount}</Text>
               </View>
-              <Text style={styles.time}>{time}</Text>
-            </View>
-            <View style={styles.bottomRow}>
-              <Text style={styles.preview} numberOfLines={1}>{preview}</Text>
-              {chat.unreadCount > 0 && (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{chat.unreadCount > 99 ? '99+' : chat.unreadCount}</Text>
-                </View>
-              )}
-            </View>
+            )}
           </View>
+        </View>
 
-          <TouchableOpacity
-            ref={dotsRef}
-            style={styles.dotsButton}
-            onPress={openMenu}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <MoreVertical size={18} color={COLORS.textMuted} />
-          </TouchableOpacity>
+        <TouchableOpacity
+          ref={dotsRef}
+          style={styles.dotsButton}
+          onPress={openMenu}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <MoreVertical size={18} color={COLORS.textDim} />
         </TouchableOpacity>
-      </Animated.View>
+      </TouchableOpacity>
 
       <Modal transparent visible={menuVisible} onRequestClose={() => setMenuVisible(false)} animationType="none">
         <Pressable style={StyleSheet.absoluteFill} onPress={() => setMenuVisible(false)}>

@@ -2,32 +2,31 @@ export const COLORS = {
   background: '#0E1117',
   surface: '#161B22',
   surfaceLight: 'rgba(255, 255, 255, 0.04)',
-  surfaceHighlight: 'rgba(61, 165, 217, 0.08)',
-  primary: '#7C3AED',
-  primaryHover: '#8B5CF6',
-  primaryDark: '#5B21B6',
-  primaryLight: 'rgba(124, 58, 237, 0.15)',
+  surfaceHighlight: 'rgba(61, 165, 217, 0.1)', // #3DA5D9 with opacity
+  primary: '#3DA5D9',
+  primaryHover: '#2B8FBF',
+  primaryDark: '#1E7AAA',
+  primaryLight: 'rgba(61, 165, 217, 0.15)',
   text: '#E2E8F0',
   textMuted: '#64748B',
-  textDim: '#94A3B8',
+  textDim: '#334155',
   border: 'rgba(255, 255, 255, 0.08)',
-  borderFocus: 'rgba(124, 58, 237, 0.5)',
-  error: '#EF4444',
+  borderFocus: 'rgba(61, 165, 217, 0.5)',
+  error: '#F87171',
   errorBg: 'rgba(239, 68, 68, 0.1)',
-  success: '#10B981',
+  success: '#22C55E',
   warning: '#F59E0B',
   transparent: 'transparent',
-  overlay: 'rgba(14, 17, 23, 0.85)',
-  // Aura halo colors
-  auraSapphire: '#2563EB',
+  overlay: 'rgba(14, 17, 23, 0.8)',
+  // Original Vanilla indicators
+  msgSent: '#475569',
+  msgDelivered: '#3DA5D9',
+  msgSeen: '#22C55E',
+  online: '#22C55E',
+  // Aura colors
+  auraSapphire: '#3B82F6',
   auraEmerald: '#10B981',
-  auraCharcoal: '#374151',
-  // Message status colors
-  msgSent: '#374151',
-  msgDelivered: '#1D4ED8',
-  msgSeen: '#059669',
-  // Online dot
-  online: '#10B981',
+  auraCharcoal: '#334155',
 };
 
 export const SPACING = {
@@ -67,40 +66,19 @@ export const TYPOGRAPHY = {
 };
 
 export const SHADOWS = {
-  glow: {
-    shadowColor: '#7C3AED',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  glowSapphire: {
-    shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  glowEmerald: {
-    shadowColor: '#10B981',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 8,
-    elevation: 6,
-  },
   card: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.3,
+    shadowRadius: 24,
+    elevation: 8,
   },
   subtle: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
 };
 

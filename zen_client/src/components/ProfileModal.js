@@ -6,7 +6,7 @@ import {
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
-import { X, Camera, User, Mail, Lock, AtSign, Check } from 'lucide-react-native';
+import { X, Camera, User, Mail, Lock, AtSign, Check, Eye, EyeOff, CheckCircle2, Circle } from 'lucide-react-native';
 import { COLORS, SPACING, ROUNDING, TYPOGRAPHY, SHADOWS } from '../theme';
 import { AuthContext } from '../contexts/AuthContext';
 import api from '../services/api';
@@ -17,13 +17,20 @@ export default function ProfileModal({ visible, onClose }) {
   const [fullName, setFullName] = useState(user?.fullName || '');
   const [email] = useState(user?.email || '');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [avatar, setAvatar] = useState(user?.avatar || '');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  const criteria = [
+    { label: 'At least 8 characters', met: password.length >= 8 },
+    { label: 'Contains a number', met: /\d/.test(password) },
+    { label: 'Contains a special char', met: /[^A-Za-z0-9]/.test(password) },
+  ];
+
   const pickAvatar = async () => {
     const res = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ImagePicker.MediaType.Images,
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.7,
@@ -42,6 +49,10 @@ export default function ProfileModal({ visible, onClose }) {
   };
 
   const handleSave = async () => {
+    if (password.trim() && !criteria.every(c => c.met)) {
+      Alert.alert('Incomplete', 'New password does not meet all criteria.');
+      return;
+    }
     setLoading(true);
     setSuccess(false);
     try {
@@ -104,9 +115,40 @@ export default function ProfileModal({ visible, onClose }) {
           <Field icon={<AtSign size={18} color={COLORS.textMuted} />} label="Username" value={username} onChangeText={setUsername} placeholder="your_username" autoCapitalize="none" />
           <Field icon={<User size={18} color={COLORS.textMuted} />} label="Display name" value={fullName} onChangeText={setFullName} placeholder="Display name" />
           <Field icon={<Mail size={18} color={COLORS.textMuted} />} label="Email" value={email} editable={false} placeholder="email@example.com" keyboardType="email-address" autoCapitalize="none" />
-          <Field icon={<Lock size={18} color={COLORS.textMuted} />} label="New password" value={password} onChangeText={setPassword} placeholder="Leave blank to keep current" secureTextEntry />
+          
+          <View style={fieldStyles.group}>
+            <Text style={fieldStyles.label}>New password</Text>
+            <View style={fieldStyles.inputRow}>
+              <Lock size={18} color={COLORS.textMuted} />
+              <TextInput
+                style={fieldStyles.input}
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Leave blank to keep current"
+                placeholderTextColor={COLORS.textMuted}
+                secureTextEntry={!showPassword}
+                selectionColor={COLORS.primary}
+              />
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                {showPassword ? <EyeOff size={18} color={COLORS.textMuted} /> : <Eye size={18} color={COLORS.textMuted} />}
+              </TouchableOpacity>
+            </View>
+          </View>
 
-          <TouchableOpacity style={[styles.saveBtn, SHADOWS.glow]} onPress={handleSave} disabled={loading}>
+          {password.length > 0 && (
+            <View style={styles.criteriaBox}>
+              {criteria.map((c, i) => (
+                <View key={i} style={styles.criteriaRow}>
+                  {c.met 
+                    ? <CheckCircle2 size={10} color={COLORS.success} /> 
+                    : <Circle size={10} color={COLORS.textMuted} />}
+                  <Text style={[styles.criteriaText, c.met && styles.criteriaMet]}>{c.label}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          <TouchableOpacity style={[styles.saveBtn]} onPress={handleSave} disabled={loading}>
             <LinearGradient colors={[COLORS.primary, COLORS.primaryDark]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.saveBtnGradient}>
               {loading ? (
                 <ActivityIndicator color="#fff" />
@@ -233,6 +275,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: COLORS.surface,
+  },
+  criteriaBox: {
+    marginTop: -SPACING.sm,
+    marginBottom: SPACING.md,
+    paddingHorizontal: SPACING.xs,
+    gap: 4,
+  },
+  criteriaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  criteriaText: {
+    color: COLORS.textMuted,
+    fontSize: 10,
+  },
+  criteriaMet: {
+    color: COLORS.success,
   },
   saveBtn: {
     marginTop: SPACING.lg,

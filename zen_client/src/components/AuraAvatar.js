@@ -2,24 +2,22 @@ import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import { COLORS, SHADOWS } from '../theme';
 
+import { AuthContext } from '../contexts/AuthContext';
+
 export default function AuraAvatar({ user, size = 44, moments = [], viewedIds = new Set(), style }) {
-  const isMe = moments.some(m => m.user?.id === user?.id);
-  const userMoments = moments.filter(m => m.user?.id === user?.id);
+  const { user: currentUser } = React.useContext(AuthContext);
+  const myId = currentUser?._id || currentUser?.id;
+  const isMe = user?.id === myId || user?._id === myId;
+  
+  const userMoments = moments.filter(m => m.user?.id === user?.id || m.userId === user?.id);
   const hasUnwatched = userMoments.some(m => !viewedIds.has(m.id));
 
   let haloColor = null;
-  let haloShadow = null;
 
   if (userMoments.length > 0) {
-    if (isMe && hasUnwatched) {
-      haloColor = COLORS.auraSapphire;
-      haloShadow = SHADOWS.glowSapphire;
-    } else if (!isMe && hasUnwatched) {
-      haloColor = COLORS.auraEmerald;
-      haloShadow = SHADOWS.glowEmerald;
-    } else {
-      haloColor = COLORS.auraCharcoal;
-    }
+    haloColor = isMe
+      ? (hasUnwatched ? COLORS.auraSapphire : COLORS.auraCharcoal)
+      : (hasUnwatched ? COLORS.auraEmerald : COLORS.auraCharcoal);
   }
 
   const avatarSize = size;
@@ -38,7 +36,6 @@ export default function AuraAvatar({ user, size = 44, moments = [], viewedIds = 
               borderRadius: haloSize / 2,
               borderColor: haloColor,
             },
-            haloShadow,
           ]}
         />
       )}

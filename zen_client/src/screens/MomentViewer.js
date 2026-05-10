@@ -3,14 +3,16 @@ import {
   View, Text, StyleSheet, TouchableOpacity, Dimensions,
   FlatList, Image, Animated, Easing, StatusBar
 } from 'react-native';
-import { Video, ResizeMode } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { ArrowLeft, Music, Eye } from 'lucide-react-native';
-import { COLORS, SPACING, ROUNDING, TYPOGRAPHY } from '../theme';
+import { COLORS, SPACING, ROUNDING, TYPOGRAPHY, SHADOWS } from '../theme';
 import api from '../services/api';
+import AuraAvatar from '../components/AuraAvatar';
+
+import { Audio } from 'expo-av';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 const MOMENT_DURATION = 5000;
@@ -25,8 +27,31 @@ export default function MomentViewer() {
   const flatListRef = useRef(null);
   const progressAnim = useRef(new Animated.Value(0)).current;
   const animRef = useRef(null);
+  const [sound, setSound] = useState(null);
 
   const current = moments[currentIndex];
+
+  useEffect(() => {
+    return () => { if (sound) sound.unloadAsync(); };
+  }, [sound]);
+
+  const playSong = async (song) => {
+    if (sound) await sound.unloadAsync();
+    if (!song?.previewUrl) return;
+    const { sound: newSound } = await Audio.Sound.createAsync(
+      { uri: song.previewUrl },
+      { shouldPlay: true, positionMillis: (song.startTime || 0) * 1000 }
+    );
+    setSound(newSound);
+  };
+
+  useEffect(() => {
+    if (current?.songData) {
+      playSong(current.songData);
+    } else if (sound) {
+      sound.stopAsync();
+    }
+  }, [currentIndex]);
 
   const markViewed = useCallback(async (id) => {
     try { await api.post(`/moments/${id}/view`); } catch {}
@@ -57,16 +82,22 @@ export default function MomentViewer() {
     }
   }, [currentIndex]);
 
+  const [viewedIds, setViewedIds] = useState(new Set());
+
   useEffect(() => {
-    if (current) markViewed(current.id);
+    if (current) {
+      markViewed(current.id);
+      setViewedIds(prev => new Set([...prev, current.id]));
+    }
   }, [currentIndex]);
 
   useEffect(() => {
     if (!current || current.mediaType === 'video') return;
+    const duration = (current.songData?.duration || 5) * 1000;
     progressAnim.setValue(0);
     animRef.current = Animated.timing(progressAnim, {
       toValue: 1,
-      duration: MOMENT_DURATION,
+      duration: duration,
       easing: Easing.linear,
       useNativeDriver: false,
     });
@@ -101,21 +132,42 @@ export default function MomentViewer() {
         showsHorizontalScrollIndicator={false}
         initialScrollIndex={startIndex}
         getItemLayout={(_, index) => ({ length: SCREEN_W, offset: SCREEN_W * index, index })}
-        renderItem={({ item }) => (
-          <View style={styles.slide}>
-            {item.mediaType === 'video'
-              ? <Video
-                  source={{ uri: item.mediaUrl }}
-                  style={styles.media}
-                  resizeMode={ResizeMode.COVER}
-                  shouldPlay={item.id === current?.id}
-                  isLooping={false}
-                  onPlaybackStatusUpdate={handleVideoStatus}
-                />
-              : <Image source={{ uri: item.mediaUrl }} style={styles.media} resizeMode="cover" />
-            }
-          </View>
-        )}
+        renderItem={({ item }) => {
+          const song = item.songData;
+          return (
+            <View style={styles.slide}>
+               <LinearGradient
+                colors={['#1F2937', '#0F172A']}
+                style={StyleSheet.absoluteFill}
+              />
+              
+              <View style={styles.centerContent}>
+                {song ? (
+                  <View style={styles.songContainer}>
+                    <Image source={{ uri: song.coverUrl }} style={styles.songArtwork} />
+                    <View style={styles.visualizer}>
+                      {[1, 2, 3, 4, 5, 6].map(i => (
+                        <View key={i} style={[styles.visBar, { height: 8 + Math.random() * 12 }]} />
+                      ))}
+                    </View>
+                    <View style={styles.songBadgeRow}>
+                      <View style={[styles.songBadge, { backgroundColor: song.source === 'iTunes' ? '#FF2D55' : '#00C7F2' }]}>
+                         <Text style={styles.songBadgeText}>{song.source}</Text>
+                      </View>
+                      <View style={styles.songBadge}>
+                         <Text style={styles.songBadgeText}>{song.duration}s</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.songTitle}>{song.title}</Text>
+                    <Text style={styles.songArtist}>{song.artist}</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.momentText}>{item.content}</Text>
+                )}
+              </View>
+            </View>
+          );
+        }}
       />
 
       <LinearGradient
@@ -135,39 +187,27 @@ export default function MomentViewer() {
 
         <View style={styles.headerRow}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <ArrowLeft size={22} color="#fff" />
+             <AuraAvatar user={current?.user} size={40} moments={moments} viewedIds={viewedIds} />
           </TouchableOpacity>
           <View style={styles.userInfo}>
             <Text style={styles.username}>{current?.user?.username || 'Unknown'}</Text>
-            {current?.viewCount !== undefined && (
-              <View style={styles.viewCount}>
-                <Eye size={12} color="rgba(255,255,255,0.7)" />
-                <Text style={styles.viewCountText}>{current.viewCount}</Text>
-              </View>
-            )}
+            <Text style={styles.timeAgo}>{current?.inserted_at ? 'Just now' : ''}</Text>
+          </View>
+          <View style={styles.headerActions}>
+            <View style={styles.viewCount}>
+              <Eye size={18} color="#fff" />
+              <Text style={styles.viewCountText}>{current?.viewCount || 0}</Text>
+            </View>
+            <TouchableOpacity style={styles.moreBtn} onPress={() => navigation.goBack()}>
+               <X size={24} color="#fff" />
+            </TouchableOpacity>
           </View>
         </View>
       </LinearGradient>
 
-      <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.8)']}
-        style={[styles.bottomGradient, { paddingBottom: insets.bottom + SPACING.md }]}
-      >
-        {current?.caption ? (
-          <Text style={styles.caption}>{current.caption}</Text>
-        ) : null}
-        {song && (
-          <BlurView intensity={30} tint="dark" style={styles.musicTag}>
-            <Music size={14} color="#fff" />
-            <Text style={styles.musicText} numberOfLines={1}>
-              {song.title} - {song.artist}
-            </Text>
-            <View style={[styles.sourceChip, song.source === 'iTunes' ? styles.itunesChip : styles.deezerChip]}>
-              <Text style={styles.sourceChipText}>{song.source}</Text>
-            </View>
-          </BlurView>
-        )}
-      </LinearGradient>
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>#moments. - powered by OLH ZenChat.</Text>
+      </View>
 
       <TouchableOpacity style={styles.tapLeft} onPress={goPrev} />
       <TouchableOpacity style={styles.tapRight} onPress={goNext} />
@@ -177,23 +217,83 @@ export default function MomentViewer() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
-  slide: { width: SCREEN_W, height: SCREEN_H },
-  media: { width: SCREEN_W, height: SCREEN_H },
+  slide: { width: SCREEN_W, height: SCREEN_H, justifyContent: 'center', alignItems: 'center' },
+  centerContent: {
+    width: '80%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  songContainer: {
+    alignItems: 'center',
+  },
+  songArtwork: {
+    width: 180,
+    height: 180,
+    borderRadius: ROUNDING.lg,
+    marginBottom: SPACING.xl,
+    ...SHADOWS.card,
+  },
+  visualizer: {
+    flexDirection: 'row',
+    gap: 4,
+    alignItems: 'center',
+    height: 20,
+    marginBottom: SPACING.xl,
+  },
+  visBar: {
+    width: 3,
+    backgroundColor: '#3B82F6',
+    borderRadius: 2,
+  },
+  songBadgeRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 8,
+  },
+  songBadge: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  songBadgeText: {
+    color: '#fff',
+    fontSize: 9,
+    fontWeight: '700',
+  },
+  songTitle: {
+    color: '#fff',
+    fontSize: TYPOGRAPHY.fontSizes.xl,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  songArtist: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: TYPOGRAPHY.fontSizes.md,
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  momentText: {
+    color: '#fff',
+    fontSize: 28,
+    fontWeight: '600',
+    textAlign: 'center',
+    lineHeight: 38,
+  },
   topGradient: {
     position: 'absolute',
     top: 0, left: 0, right: 0,
-    height: 160,
     paddingHorizontal: SPACING.md,
   },
   progressRow: {
     flexDirection: 'row',
     gap: 4,
-    marginBottom: SPACING.sm,
+    marginBottom: SPACING.lg,
   },
   progressTrack: {
     flex: 1,
-    height: 2.5,
-    backgroundColor: 'rgba(255,255,255,0.3)',
+    height: 3,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: 2,
     overflow: 'hidden',
   },
@@ -208,73 +308,52 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: SPACING.sm,
+    gap: SPACING.md,
   },
-  backBtn: { padding: SPACING.xs },
   userInfo: { flex: 1 },
   username: {
     color: '#fff',
     fontSize: TYPOGRAPHY.fontSizes.md,
     fontWeight: TYPOGRAPHY.weights.semibold,
   },
+  timeAgo: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 12,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.lg,
+  },
   viewCount: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginTop: 2,
+    gap: 6,
   },
   viewCountText: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: TYPOGRAPHY.fontSizes.xs,
-  },
-  bottomGradient: {
-    position: 'absolute',
-    bottom: 0, left: 0, right: 0,
-    height: 200,
-    paddingHorizontal: SPACING.lg,
-    justifyContent: 'flex-end',
-  },
-  caption: {
     color: '#fff',
     fontSize: TYPOGRAPHY.fontSizes.md,
-    marginBottom: SPACING.sm,
+    fontWeight: '600',
   },
-  musicTag: {
-    flexDirection: 'row',
+  footer: {
+    position: 'absolute',
+    bottom: SPACING.xl,
+    left: 0, right: 0,
     alignItems: 'center',
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    borderRadius: ROUNDING.full,
-    overflow: 'hidden',
-    gap: SPACING.sm,
-    alignSelf: 'flex-start',
-    maxWidth: '90%',
   },
-  musicText: {
-    color: '#fff',
-    fontSize: TYPOGRAPHY.fontSizes.sm,
-    flex: 1,
-  },
-  sourceChip: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: ROUNDING.sm,
-  },
-  itunesChip: { backgroundColor: '#FC3C44' },
-  deezerChip: { backgroundColor: '#EF5466' },
-  sourceChipText: {
-    color: '#fff',
-    fontSize: TYPOGRAPHY.fontSizes.xs,
-    fontWeight: TYPOGRAPHY.weights.semibold,
+  footerText: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 10,
+    letterSpacing: 0.5,
   },
   tapLeft: {
     position: 'absolute',
-    left: 0, top: 100,
-    width: '35%', height: SCREEN_H - 100,
+    left: 0, top: 0, bottom: 0,
+    width: '30%',
   },
   tapRight: {
     position: 'absolute',
-    right: 0, top: 100,
-    width: '65%', height: SCREEN_H - 100,
+    right: 0, top: 0, bottom: 0,
+    width: '70%',
   },
 });

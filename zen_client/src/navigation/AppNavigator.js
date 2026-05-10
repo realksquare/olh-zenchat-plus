@@ -47,7 +47,7 @@ function MainTabs({ navigation }) {
         options={{ tabBarIcon: ({ color, size }) => <Home color={color} size={size - 2} /> }}
       />
       <Tab.Screen
-        name="Aura"
+        name="#moments."
         component={MomentsScreen}
         options={{ tabBarIcon: ({ color, size }) => <Sparkles color={color} size={size - 2} /> }}
       />
@@ -88,7 +88,7 @@ export default function AppNavigator() {
 
   return (
     <NavigationContainer ref={navRef}>
-      <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+      <Stack.Navigator screenOptions={{ headerShown: false, animation: 'none' }}>
         {user ? (
           <>
             <Stack.Screen name="MainTabs" component={MainTabs} />
@@ -96,7 +96,7 @@ export default function AppNavigator() {
             <Stack.Screen
               name="MomentViewer"
               component={MomentViewer}
-              options={{ animation: 'fade', presentation: 'fullScreenModal' }}
+              options={{ animation: 'none', presentation: 'fullScreenModal' }}
             />
           </>
         ) : (

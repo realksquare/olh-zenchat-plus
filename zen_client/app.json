@@ -28,12 +28,11 @@
     },
     "plugins": [
       "expo-secure-store",
-      "expo-blur",
       [
         "expo-notifications",
         {
           "icon": "./assets/icon.png",
-          "color": "#7C3AED",
+          "color": "#3DA5D9",
           "sounds": []
         }
       ]

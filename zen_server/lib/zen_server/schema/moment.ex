@@ -19,7 +19,7 @@ defmodule ZenServer.Schema.Moment do
   def changeset(moment, params) do
     moment
     |> cast(params, [:media_url, :media_type, :caption, :expires_at, :song_data, :user_id])
-    |> validate_required([:media_url, :user_id])
+    |> validate_required([:user_id])
   end
 end
 

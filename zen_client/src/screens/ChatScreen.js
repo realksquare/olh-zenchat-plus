@@ -198,7 +198,7 @@ export default function ChatScreen() {
 
   const handlePickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ImagePicker.MediaType.Images,
       allowsEditing: true,
       quality: 0.75,
     });
@@ -341,12 +341,12 @@ export default function ChatScreen() {
           <TouchableOpacity style={styles.attachBtn} onPress={handlePickImage} disabled={uploading}>
             {uploading
               ? <ActivityIndicator size="small" color={COLORS.primary} />
-              : <ImageIcon color={COLORS.textMuted} size={22} />}
+              : <ImageIcon color={COLORS.textDim} size={22} />}
           </TouchableOpacity>
           <TextInput
             style={styles.input}
             placeholder={editingMsg ? 'Edit message...' : 'Type a message...'}
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor={COLORS.textDim}
             value={inputText}
             onChangeText={handleTextChange}
             multiline
@@ -465,6 +465,5 @@ const styles = StyleSheet.create({
   },
   sendBtnActive: {
     backgroundColor: COLORS.primary,
-    ...SHADOWS.glow,
   },
 });

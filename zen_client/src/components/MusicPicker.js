@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity,
-  FlatList, ActivityIndicator, Image, Modal
+  FlatList, ActivityIndicator, Image, Modal, Platform, KeyboardAvoidingView
 } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { Search, X, Music, Check } from 'lucide-react-native';
+import { Search, X, Music } from 'lucide-react-native';
 import { COLORS, SPACING, ROUNDING, TYPOGRAPHY } from '../theme';
 import api from '../services/api';
 
@@ -12,7 +12,6 @@ export default function MusicPicker({ visible, onSelect, onClose }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selected, setSelected] = useState(null);
 
   const search = async (text) => {
     setQuery(text);
@@ -28,46 +27,43 @@ export default function MusicPicker({ visible, onSelect, onClose }) {
     }
   };
 
-  const confirm = () => {
-    if (selected) onSelect(selected);
-    onClose();
-  };
-
   const renderTrack = ({ item }) => {
-    const isSelected = selected?.id === item.id;
     return (
-      <TouchableOpacity
-        style={[styles.track, isSelected && styles.trackSelected]}
-        onPress={() => setSelected(isSelected ? null : item)}
-      >
+      <View style={styles.track}>
         {item.coverUrl
           ? <Image source={{ uri: item.coverUrl }} style={styles.cover} />
           : <View style={[styles.cover, styles.coverPlaceholder]}><Music size={20} color={COLORS.textMuted} /></View>
         }
         <View style={styles.trackInfo}>
-          <Text style={styles.trackTitle} numberOfLines={1}>{item.title}</Text>
-          <Text style={styles.trackArtist} numberOfLines={1}>{item.artist}</Text>
-          <View style={styles.sourceTag}>
-            <Text style={styles.sourceText}>{item.source}</Text>
+          <View style={styles.trackHeader}>
+            <Text style={styles.trackTitle} numberOfLines={1}>{item.title}</Text>
+            <View style={[styles.sourceTag, { backgroundColor: item.source === 'iTunes' ? '#FF2D55' : '#00C7F2' }]}>
+              <Text style={styles.sourceTagText}>{item.source}</Text>
+            </View>
           </View>
+          <Text style={styles.trackArtist} numberOfLines={1}>• {item.artist}</Text>
         </View>
-        {isSelected && <Check size={18} color={COLORS.primary} />}
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.selectBtn} onPress={() => { onSelect(item); onClose(); }}>
+          <Text style={styles.selectBtnText}>Select</Text>
+        </TouchableOpacity>
+      </View>
     );
   };
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill}>
+      <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill}>
         <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onClose} />
       </BlurView>
-      <View style={styles.sheet}>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.sheet}
+      >
         <View style={styles.handle} />
         <View style={styles.titleRow}>
-          <Music size={20} color={COLORS.primary} />
-          <Text style={styles.title}>Pick a song</Text>
+          <Text style={styles.title}>#moments.</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-            <X size={20} color={COLORS.textMuted} />
+            <X size={20} color={COLORS.text} />
           </TouchableOpacity>
         </View>
 
@@ -77,7 +73,7 @@ export default function MusicPicker({ visible, onSelect, onClose }) {
             style={styles.searchInput}
             value={query}
             onChangeText={search}
-            placeholder="Search iTunes + Deezer..."
+            placeholder="Search tracks (30s previews)..."
             placeholderTextColor={COLORS.textMuted}
             autoFocus
             autoCapitalize="none"
@@ -97,18 +93,7 @@ export default function MusicPicker({ visible, onSelect, onClose }) {
               : null
           }
         />
-
-        {selected && (
-          <View style={styles.confirmBar}>
-            <Text style={styles.confirmText} numberOfLines={1}>
-              {selected.title} - {selected.artist}
-            </Text>
-            <TouchableOpacity style={styles.confirmBtn} onPress={confirm}>
-              <Text style={styles.confirmBtnText}>Add to Aura</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -125,6 +110,7 @@ const styles = StyleSheet.create({
     maxHeight: '85%',
     borderWidth: 1,
     borderColor: COLORS.border,
+    paddingBottom: 40,
   },
   handle: {
     width: 40,
@@ -139,18 +125,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: SPACING.xl,
     paddingVertical: SPACING.md,
-    gap: SPACING.sm,
+    justifyContent: 'space-between',
   },
   title: {
     color: COLORS.text,
     fontSize: TYPOGRAPHY.fontSizes.lg,
     fontWeight: TYPOGRAPHY.weights.bold,
-    flex: 1,
   },
   closeBtn: {
     padding: SPACING.xs,
-    backgroundColor: COLORS.surfaceLight,
-    borderRadius: ROUNDING.full,
+    backgroundColor: COLORS.background,
+    borderRadius: ROUNDING.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   searchRow: {
     flexDirection: 'row',
@@ -158,7 +145,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: ROUNDING.full,
+    borderRadius: ROUNDING.md,
     paddingHorizontal: SPACING.md,
     marginHorizontal: SPACING.xl,
     marginBottom: SPACING.md,
@@ -172,24 +159,19 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingHorizontal: SPACING.md,
-    paddingBottom: SPACING.xxl,
+    paddingBottom: SPACING.xl,
   },
   track: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: SPACING.sm,
+    paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
-    borderRadius: ROUNDING.lg,
-    gap: SPACING.sm,
-    marginBottom: 2,
-  },
-  trackSelected: {
-    backgroundColor: COLORS.primaryLight,
+    gap: SPACING.md,
   },
   cover: {
     width: 48,
     height: 48,
-    borderRadius: ROUNDING.sm,
+    borderRadius: ROUNDING.md,
   },
   coverPlaceholder: {
     backgroundColor: COLORS.surfaceLight,
@@ -197,57 +179,46 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   trackInfo: { flex: 1 },
+  trackHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.xs,
+  },
+  sourceTag: {
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 3,
+  },
+  sourceTagText: {
+    color: '#fff',
+    fontSize: 8,
+    fontWeight: '700',
+  },
   trackTitle: {
     color: COLORS.text,
     fontSize: TYPOGRAPHY.fontSizes.sm,
-    fontWeight: TYPOGRAPHY.weights.medium,
+    fontWeight: TYPOGRAPHY.weights.semibold,
+    flexShrink: 1,
   },
   trackArtist: {
     color: COLORS.textMuted,
     fontSize: TYPOGRAPHY.fontSizes.xs,
     marginTop: 2,
   },
-  sourceTag: {
-    marginTop: 4,
-    backgroundColor: COLORS.surfaceLight,
-    borderRadius: ROUNDING.sm,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    alignSelf: 'flex-start',
+  selectBtn: {
+    backgroundColor: '#3B82F6',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
   },
-  sourceText: {
-    color: COLORS.textMuted,
-    fontSize: TYPOGRAPHY.fontSizes.xs,
+  selectBtnText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
   },
   empty: {
     color: COLORS.textMuted,
     textAlign: 'center',
     marginTop: SPACING.xl,
-  },
-  confirmBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: SPACING.xl,
-    paddingVertical: SPACING.md,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-    gap: SPACING.md,
-    paddingBottom: SPACING.xxxl,
-  },
-  confirmText: {
-    color: COLORS.textDim,
-    fontSize: TYPOGRAPHY.fontSizes.sm,
-    flex: 1,
-  },
-  confirmBtn: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.sm,
-    borderRadius: ROUNDING.full,
-  },
-  confirmBtnText: {
-    color: '#fff',
-    fontSize: TYPOGRAPHY.fontSizes.sm,
-    fontWeight: TYPOGRAPHY.weights.semibold,
   },
 });

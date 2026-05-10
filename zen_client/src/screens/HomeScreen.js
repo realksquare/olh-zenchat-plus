@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  TextInput, ScrollView, RefreshControl, Alert
+  TextInput, ScrollView, RefreshControl, Alert, Platform
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -50,10 +50,17 @@ export default function HomeScreen() {
   }, [fetchChats]);
 
   const handleLogout = () => {
-    Alert.alert('Sign out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign out', style: 'destructive', onPress: logout },
-    ]);
+    console.log('Logout button pressed');
+    if (Platform.OS === 'web') {
+      if (confirm('Are you sure you want to sign out?')) {
+        logout();
+      }
+    } else {
+      Alert.alert('Sign out', 'Are you sure you want to sign out?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Sign out', style: 'destructive', onPress: logout },
+      ]);
+    }
   };
 
   const filteredChats = searchQuery.trim()
@@ -93,7 +100,7 @@ export default function HomeScreen() {
         <TouchableOpacity onPress={() => setShowProfile(true)} style={styles.headerAvatar}>
           <AuraAvatar user={user} size={36} moments={moments} viewedIds={viewedMomentIds} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>ZenChat<Text style={styles.plus}>+</Text></Text>
+        <Text style={styles.headerTitle}>ZenChat+</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity onPress={() => setShowNewChat(true)} style={styles.iconBtn}>
             <MessageCirclePlus size={22} color={COLORS.textDim} />
@@ -166,10 +173,6 @@ export default function HomeScreen() {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />}
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <LinearGradient
-                colors={[COLORS.primaryLight, 'transparent']}
-                style={styles.emptyGlow}
-              />
               <Text style={styles.emptyTitle}>No chats yet</Text>
               <Text style={styles.emptySubtitle}>Start a conversation with someone</Text>
               <TouchableOpacity style={styles.emptyBtn} onPress={() => setShowNewChat(true)}>
@@ -212,10 +215,6 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     fontSize: TYPOGRAPHY.fontSizes.xl,
     fontWeight: TYPOGRAPHY.weights.bold,
-    letterSpacing: -0.5,
-  },
-  plus: {
-    color: COLORS.primary,
   },
   headerActions: {
     flexDirection: 'row',
@@ -278,14 +277,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingTop: 80,
   },
-  emptyGlow: {
-    position: 'absolute',
-    top: -20,
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    opacity: 0.4,
-  },
   emptyTitle: {
     color: COLORS.text,
     fontSize: TYPOGRAPHY.fontSizes.lg,
@@ -302,7 +293,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.xl,
     paddingVertical: SPACING.md,
     borderRadius: ROUNDING.full,
-    ...SHADOWS.glow,
   },
   emptyBtnText: {
     color: '#fff',

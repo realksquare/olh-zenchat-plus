@@ -13,21 +13,30 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, SPACING, TYPOGRAPHY, ROUNDING, SHADOWS } from '../theme';
-import { LogIn, UserPlus, Mail, Lock } from 'lucide-react-native';
-import { AuthContext } from '../contexts/AuthContext';
-
-const { width } = Dimensions.get('window');
+import { LogIn, UserPlus, Mail, Lock, Eye, EyeOff, CheckCircle2, Circle } from 'lucide-react-native';
 
 export default function LoginScreen() {
   const { login, register } = useContext(AuthContext);
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const criteria = [
+    { label: 'At least 8 characters', met: password.length >= 8 },
+    { label: 'Contains a number', met: /\d/.test(password) },
+    { label: 'Contains a special char', met: /[^A-Za-z0-9]/.test(password) },
+  ];
 
   const handleSubmit = async () => {
     if (!email || !password) {
       Alert.alert('Error', 'Please fill in all fields.');
+      return;
+    }
+
+    if (!isLoginMode && !criteria.every(c => c.met)) {
+      Alert.alert('Incomplete', 'Password does not meet all criteria.');
       return;
     }
 
@@ -58,31 +67,18 @@ export default function LoginScreen() {
       style={styles.container} 
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <LinearGradient
-        colors={[COLORS.background, COLORS.surface, COLORS.background]}
-        locations={[0, 0.5, 1]}
-        style={StyleSheet.absoluteFillObject}
-      />
-      
-      {/* Decorative Glow */}
-      <View style={styles.glowTop} />
-      <View style={styles.glowBottom} />
-
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.title}>ZenChat<Text style={styles.titlePlus}>+</Text></Text>
+          <Text style={styles.title}>ZenChat+</Text>
           <Text style={styles.subtitle}>{isLoginMode ? 'Welcome back.' : 'Create an account.'}</Text>
         </View>
 
-        <View style={[styles.card, SHADOWS.card]}>
+        <View style={styles.card}>
           <View style={styles.inputGroup}>
-            <View style={styles.inputIcon}>
-              <Mail color={COLORS.textMuted} size={20} />
-            </View>
             <TextInput
               style={styles.input}
               placeholder="Email Address"
-              placeholderTextColor={COLORS.textMuted}
+              placeholderTextColor={COLORS.textDim}
               keyboardType="email-address"
               autoCapitalize="none"
               value={email}
@@ -91,46 +87,45 @@ export default function LoginScreen() {
             />
           </View>
 
-          <View style={styles.inputGroup}>
-            <View style={styles.inputIcon}>
-              <Lock color={COLORS.textMuted} size={20} />
-            </View>
+          <View style={[styles.inputGroup, styles.passwordGroup]}>
             <TextInput
               style={styles.input}
               placeholder="Password"
-              placeholderTextColor={COLORS.textMuted}
-              secureTextEntry
+              placeholderTextColor={COLORS.textDim}
+              secureTextEntry={!showPassword}
               value={password}
               onChangeText={setPassword}
               selectionColor={COLORS.primary}
             />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
+              {showPassword ? <EyeOff size={18} color={COLORS.textDim} /> : <Eye size={18} color={COLORS.textDim} />}
+            </TouchableOpacity>
           </View>
 
+          {!isLoginMode && (
+            <View style={styles.criteriaBox}>
+              {criteria.map((c, i) => (
+                <View key={i} style={styles.criteriaRow}>
+                  {c.met 
+                    ? <CheckCircle2 size={12} color={COLORS.success} /> 
+                    : <Circle size={12} color={COLORS.textDim} />}
+                  <Text style={[styles.criteriaText, c.met && styles.criteriaMet]}>{c.label}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
           <TouchableOpacity 
-            style={styles.buttonContainer}
-            activeOpacity={0.8}
+            style={[styles.button, isLoading && styles.buttonDisabled]}
+            activeOpacity={0.7}
             onPress={handleSubmit}
             disabled={isLoading}
           >
-            <LinearGradient
-              colors={[COLORS.primary, COLORS.primaryDark]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.button}
-            >
-              {isLoading ? (
-                <ActivityIndicator color={COLORS.text} />
-              ) : (
-                <>
-                  {isLoginMode ? (
-                    <LogIn color={COLORS.text} size={20} style={styles.icon} />
-                  ) : (
-                    <UserPlus color={COLORS.text} size={20} style={styles.icon} />
-                  )}
-                  <Text style={styles.buttonText}>{isLoginMode ? 'Log In' : 'Sign Up'}</Text>
-                </>
-              )}
-            </LinearGradient>
+            {isLoading ? (
+              <ActivityIndicator color={COLORS.text} />
+            ) : (
+              <Text style={styles.buttonText}>{isLoginMode ? 'Log In' : 'Sign Up'}</Text>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -154,32 +149,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  glowTop: {
-    position: 'absolute',
-    top: -100,
-    left: -100,
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    backgroundColor: COLORS.primaryHover,
-    opacity: 0.15,
-  },
-  glowBottom: {
-    position: 'absolute',
-    bottom: -100,
-    right: -100,
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    backgroundColor: COLORS.primaryHover,
-    opacity: 0.1,
-  },
   content: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: SPACING.xl,
-    zIndex: 1,
   },
   header: {
     alignItems: 'center',
@@ -189,15 +163,11 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     fontSize: TYPOGRAPHY.fontSizes.xxl,
     fontWeight: TYPOGRAPHY.weights.bold,
-    letterSpacing: -0.5,
-  },
-  titlePlus: {
-    color: COLORS.primary,
   },
   subtitle: {
     color: COLORS.textMuted,
-    fontSize: TYPOGRAPHY.fontSizes.md,
-    marginTop: SPACING.sm,
+    fontSize: TYPOGRAPHY.fontSizes.sm,
+    marginTop: SPACING.xs,
   },
   card: {
     width: '100%',
@@ -206,46 +176,60 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
     borderRadius: ROUNDING.xl,
-    padding: SPACING.xl,
+    padding: SPACING.xxl,
+    ...SHADOWS.card,
   },
   inputGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: COLORS.background,
     borderWidth: 1,
     borderColor: COLORS.border,
     borderRadius: ROUNDING.md,
     marginBottom: SPACING.lg,
-    paddingHorizontal: SPACING.md,
+    paddingHorizontal: SPACING.lg,
   },
-  inputIcon: {
-    marginRight: SPACING.sm,
-  },
-  input: {
-    flex: 1,
-    color: COLORS.text,
-    paddingVertical: SPACING.md,
-    fontSize: TYPOGRAPHY.fontSizes.md,
-  },
-  buttonContainer: {
-    marginTop: SPACING.sm,
-    borderRadius: ROUNDING.md,
-    overflow: 'hidden',
-    ...SHADOWS.glow,
-  },
-  button: {
+  passwordGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: SPACING.lg,
-    height: 56,
+    paddingRight: SPACING.sm,
   },
-  icon: {
-    marginRight: SPACING.sm,
+  eyeBtn: {
+    padding: SPACING.xs,
+  },
+  criteriaBox: {
+    marginBottom: SPACING.lg,
+    gap: 6,
+  },
+  criteriaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  criteriaText: {
+    color: COLORS.textMuted,
+    fontSize: 11,
+  },
+  criteriaMet: {
+    color: COLORS.success,
+  },
+  input: {
+    color: COLORS.text,
+    height: 48,
+    fontSize: TYPOGRAPHY.fontSizes.sm,
+  },
+  button: {
+    backgroundColor: COLORS.primary,
+    borderRadius: ROUNDING.md,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: SPACING.sm,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
   },
   buttonText: {
-    color: COLORS.text,
-    fontSize: TYPOGRAPHY.fontSizes.md,
+    color: '#FFFFFF',
+    fontSize: TYPOGRAPHY.fontSizes.sm,
     fontWeight: TYPOGRAPHY.weights.semibold,
   },
   switchButton: {

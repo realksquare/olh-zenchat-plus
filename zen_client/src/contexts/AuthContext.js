@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import * as SecureStore from 'expo-secure-store';
+import { getItemAsync, setItemAsync, deleteItemAsync } from '../services/storage';
 import api from '../services/api';
 
 export const AuthContext = createContext();
@@ -15,8 +15,8 @@ export const AuthProvider = ({ children }) => {
 
   const loadStoredAuth = async () => {
     try {
-      const storedToken = await SecureStore.getItemAsync('zenToken');
-      const storedUser = await SecureStore.getItemAsync('zenUser');
+      const storedToken = await getItemAsync('zenToken');
+      const storedUser = await getItemAsync('zenUser');
 
       if (storedToken && storedUser) {
         setToken(storedToken);
@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }) => {
 
   const setUser = async (userData) => {
     setUserState(userData);
-    await SecureStore.setItemAsync('zenUser', JSON.stringify(userData));
+    await setItemAsync('zenUser', JSON.stringify(userData));
   };
 
   const login = async (email, password) => {
@@ -39,8 +39,8 @@ export const AuthProvider = ({ children }) => {
       const response = await api.post('/auth/login', { email, password });
       const { token: newToken, user: userData } = response.data;
 
-      await SecureStore.setItemAsync('zenToken', newToken);
-      await SecureStore.setItemAsync('zenUser', JSON.stringify(userData));
+      await setItemAsync('zenToken', newToken);
+      await setItemAsync('zenUser', JSON.stringify(userData));
 
       setToken(newToken);
       setUserState(userData);
@@ -63,8 +63,8 @@ export const AuthProvider = ({ children }) => {
       const response = await api.post('/auth/register', { email, password });
       const { token: newToken, user: userData } = response.data;
 
-      await SecureStore.setItemAsync('zenToken', newToken);
-      await SecureStore.setItemAsync('zenUser', JSON.stringify(userData));
+      await setItemAsync('zenToken', newToken);
+      await setItemAsync('zenUser', JSON.stringify(userData));
 
       setToken(newToken);
       setUserState(userData);
@@ -77,8 +77,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    await SecureStore.deleteItemAsync('zenToken');
-    await SecureStore.deleteItemAsync('zenUser');
+    await deleteItemAsync('zenToken');
+    await deleteItemAsync('zenUser');
     setToken(null);
     setUserState(null);
   };
